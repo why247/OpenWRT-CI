@@ -9,20 +9,27 @@ sed -i "s/(\(luciversion || ''\))/(\1) + (' \/ $WRT_MARK-$WRT_DATE')/g" $(find .
 
 WIFI_SH=$(find ./target/linux/{mediatek/filogic,qualcommax}/base-files/etc/uci-defaults/ -type f -name "*set-wireless.sh" 2>/dev/null)
 WIFI_UC="./package/network/config/wifi-scripts/files/lib/wifi/mac80211.uc"
+
 if [ -f "$WIFI_SH" ]; then
-Assuming similar replacements for WIFI_SH if needed, but primarily for Qualcomm using UC below
-:
+    # 修改WIFI名称
+    sed -i "s/BASE_SSID='.*'/BASE_SSID='$WRT_SSID'/g" "$WIFI_SH"
+    # 修改WIFI密码
+    sed -i "s/BASE_WORD='.*'/BASE_WORD='$WRT_WORD'/g" "$WIFI_SH"
 elif [ -f "$WIFI_UC" ]; then
-修改WIFI地区为US (applies to both radios)
-sed -i "s/country='.*'/country='US'/g" $WIFI_UC
-修改5G (radio0) 信道为44 (assuming default is '36' for 5G)
-sed -i "s/channel='36'/channel='44'/g" $WIFI_UC
-修改5G (radio0) 宽度为160MHz (assuming default is 'HE80' for AX 5G)
-sed -i "s/htmode='HE80'/htmode='HE160'/g" $WIFI_UC
-修改2.4G (radio1) 信道为9 (assuming default is '1' for 2.4G)
-sed -i "s/channel='1'/channel='9'/g" $WIFI_UC
-添加或修改功率为24dBm (for both radios; insert after disabled line if not present, assuming ucode syntax)
-sed -i "/uci.set('wireless', radio, 'disabled', '0');/a \ \ uci.set('wireless', radio, 'txpower', '24');" $WIFI_UC
+    # 修改WIFI地区为US
+    sed -i "s/country='.*'/country='US'/g" "$WIFI_UC"
+    
+    # 修改5G (radio0) 信道为44
+    sed -i "s/channel='36'/channel='44'/g" "$WIFI_UC"
+    
+    # 修改5G (radio0) 宽度为160MHz
+    sed -i "s/htmode='HE80'/htmode='HE160'/g" "$WIFI_UC"
+    
+    # 修改2.4G (radio1) 信道为9
+    sed -i "s/channel='1'/channel='9'/g" "$WIFI_UC"
+    
+    # 添加或修改功率为24dBm
+    sed -i "/uci.set('wireless', radio, 'disabled', '0');/a \ \ uci.set('wireless', radio, 'txpower', '24');" "$WIFI_UC"
 fi
 
 CFG_FILE="./package/base-files/files/bin/config_generate"
