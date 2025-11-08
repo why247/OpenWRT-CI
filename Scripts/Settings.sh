@@ -9,40 +9,65 @@ sed -i "s/(\(luciversion || ''\))/(\1) + (' \/ $WRT_MARK-$WRT_DATE')/g" $(find .
 
 WIFI_SH=$(find ./target/linux/{mediatek/filogic,qualcommax}/base-files/etc/uci-defaults/ -type f -name "*set-wireless.sh" 2>/dev/null)
 WIFI_UC="./package/network/config/wifi-scripts/files/lib/wifi/mac80211.uc"
+
 if [ -f "$WIFI_SH" ]; then
-  # 修改WIFI名称
-  sed -i "s/BASE_SSID='.*'/BASE_SSID='$WRT_SSID'/g" $WIFI_SH
-  # 修改WIFI密码
-  sed -i "s/BASE_WORD='.*'/BASE_WORD='$WRT_WORD'/g" $WIFI_SH
-  # If needed, add similar modifications for country, channels, etc., adapted to WIFI_SH syntax
-  # For example (assuming similar variables; adjust based on actual file content):
-  # sed -i "s/BASE_COUNTRY='.*'/BASE_COUNTRY='US'/g" $WIFI_SH
-  # sed -i "s/BASE_CHANNEL_5G='.*'/BASE_CHANNEL_5G='44'/g" $WIFI_SH
-  # sed -i "s/BASE_HTMODE_5G='.*'/BASE_HTMODE_5G='HE160'/g" $WIFI_SH
-  # sed -i "s/BASE_CHANNEL_2G='.*'/BASE_CHANNEL_2G='9'/g" $WIFI_SH
-  # sed -i "s/BASE_TXPOWER='.*'/BASE_TXPOWER='24'/g" $WIFI_SH
+    # 修改WIFI名称
+    sed -i "s/BASE_SSID='.*'/BASE_SSID='$WRT_SSID'/g" "$WIFI_SH"
+    # 修改WIFI密码
+    sed -i "s/BASE_WORD='.*'/BASE_WORD='$WRT_WORD'/g" "$WIFI_SH"
 elif [ -f "$WIFI_UC" ]; then
-  # 修改WIFI名称
-  sed -i "s/ssid='.*'/ssid='$WRT_SSID'/g" $WIFI_UC
-  # 修改WIFI密码
-  sed -i "s/key='.*'/key='$WRT_WORD'/g" $WIFI_UC
-  # 修改WIFI地区为 US (applies to both radios)
-  sed -i "s/\('country', '\)[^']*'/\1US'/g" $WIFI_UC
-  # 修改WIFI加密
-  sed -i "s/encryption='.*'/encryption='psk2+ccmp'/g" $WIFI_UC
-  # 修改 5G (radio0) 信道为 44 (assuming default is '36' for 5G)
-  sed -i "s/\('channel', '\)36'/\144'/g" $WIFI_UC
-  # 修改 5G (radio0) 宽度为 160MHz (assuming default is 'HE80' for AX 5G)
-  sed -i "s/\('htmode', '\)HE80'/\1HE160'/g" $WIFI_UC
-  # 修改 2.4G (radio1) 信道为 9 (assuming default is '1' for 2.4G)
-  sed -i "s/\('channel', '\)1'/\19'/g" $WIFI_UC
-  # 添加或修改功率为 24dBm (for both radios; insert after disabled line if not present)
-  if grep -q "uci\.set(\s*'wireless'\s*,\s*radio\s*,\s*'txpower'\s*," $WIFI_UC; then
-    sed -i "s/\('txpower', '\)[^']*'/\124'/g" $WIFI_UC
-  else
-    sed -i "/uci\.set(\s*'wireless'\s*,\s*radio\s*,\s*'disabled'\s*,\s*'0'\s*);/a \ \ uci.set('wireless', radio, 'txpower', '24');" $WIFI_UC
-  fi
+    # 备份原文件
+    cp "$WIFI_UC" "$WIFI_UC.bak"
+    
+    # 修改国家代码 - 直接修改country变量赋值
+    sed -i "s/country='[^']*'/country='US'/g" "$WIFI_UC"
+    sed -i "s/country || ''/country || 'US'/g" "$WIFI_UC"
+    
+    # 修改信道设置 - 在channel赋值前插入条件判断
+    # 找到channel设置行并在前面插入我们的逻辑
+    sed -i "/let channel = rband.default_channel/a\        if (band_name == \"5G\") channel = \"44\";\n        else if (band_name == \"2G\") channel = \"9\";" "$WIFI_UC"
+    
+    # 修改带宽设置 - 替换htmode生成逻辑
+    # 找到htmode设置的相关代码并替换
+    sed -i '/let htmode = filter(htmode_order, (m) => band\[lc(m)\]\)\[0\];/,/htmode = "NOHT";/c\
+        let htmode = "NOHT";\
+        if (band_name == "5G") {\
+            width = 160;\
+            htmode = "HE160";\
+        } else if (band_name == "2G") {\
+            width = 20;\
+            htmode = "HT20";\
+        } else {\
+            htmode = filter(htmode_order, (m) => band[lc(m)])[0];\
+            if (htmode)\
+                htmode += width;\
+            else\
+                htmode = "NOHT";\
+        }' "$WIFI_UC"
+    
+    # 添加功率设置 - 在生成配置的部分添加txpower
+    # 在disabled设置行后添加txpower设置
+    sed -i "/set \${s}.disabled='0'/a\\
+set \\${s}.txpower='24'" "$WIFI_UC"
+    
+    # 修改SSID和加密设置
+    sed -i "s/ssid='\${defaults?.ssid || \"ImmortalWRT\"}'/ssid='$WRT_SSID'/g" "$WIFI_UC"
+    sed -i "s/encryption='\${defaults?.encryption || \"none\"}'/encryption='psk2'/g" "$WIFI_UC"
+    sed -i "s/key='\${defaults?.key || \"\"}'/key='$WRT_WORD'/g" "$WIFI_UC"
+    
+    echo "修改完成！"
+    
+    # 显示关键修改部分
+    echo "=== 修改后的关键配置 ==="
+    grep -A 5 -B 5 "channel.*=" "$WIFI_UC" | head -20
+    echo "..."
+    grep -A 5 -B 5 "htmode.*=" "$WIFI_UC" | head -20
+    echo "..."
+    grep -A 2 -B 2 "txpower" "$WIFI_UC"
+    
 fi
+
+
 CFG_FILE="./package/base-files/files/bin/config_generate"
 #修改默认IP地址
 sed -i "s/192\.168\.[0-9]*\.[0-9]*/$WRT_IP/g" $CFG_FILE
