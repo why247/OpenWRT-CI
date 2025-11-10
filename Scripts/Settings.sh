@@ -25,7 +25,7 @@ elif [ -f "$WIFI_UC" ]; then
     
     # 1. 修改国家代码 - 更精确的匹配
     # 找到设置country的行并修改
-    sed -i "s/set \${s}.country='[^']*'/set \${s}.country='US'/g" "$WIFI_UC"
+	sed -i "s/country='.*'/country='US'/g" $WIFI_UC
     
     # 2. 修改功率设置 - 在正确的位置插入
     # 先检查是否已存在txpower设置
