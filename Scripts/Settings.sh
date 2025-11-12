@@ -27,52 +27,52 @@ elif [ -f "$WIFI_UC" ]; then
     # 找到设置country的行并修改
 	sed -i "s/country='.*'/country='US'/g" $WIFI_UC
     
-# 2. 修改功率设置 - 使用变量，避免 if 在 print 内
-    # 先插入 ucode 计算 txpower（在 lc(band_name) 后，使用小写 band_name）
-    sed -i '/band_name = lc(band_name);/a\
-let txpower = "";\
-if (band_name == "5g") {\
-    txpower = "25";\
-} else if (band_name == "2g") {\
-    txpower = "24";\
-}' "$WIFI_UC"
-    # 然后在 print 的 disabled 行后插入 set（匹配 $$）
-    sed -i "/set \${s}\.disabled='0'/a set \$\$\ {s}\.txpower='\$\$\ {txpower}'" "$WIFI_UC"
+# 2. 删除危险的原 channel 行（避免 null 崩溃）
+sed -i '/let channel = rband\.default_channel ?? "auto";/d' "$WIFI_UC"
 
-    # 3. 修改信道设置 - 替换为安全版本 + 自定义逻辑
-    sed -i 's/let channel = rband.default_channel ?? "auto";/let channel = (rband ? rband.default_channel ?? "auto" : "auto");\
-# 自定义信道设置\
-if (band_name == "2G") {\
-    channel = "9";\
-} else if (band_name == "5G") {\
-    channel = "44";\
-}/g' "$WIFI_UC"
+# 3. 在 rband 定义后，安全插入 channel 逻辑（使用大写 band_name）
+sed -i '/let rband = radio\.bands\[band_name\];/a\
+\ \ \ \ let channel = "auto";\
+\ \ \ \ if (rband && rband.default_channel) {\
+\ \ \ \ \ \ \ \ channel = rband.default_channel;\
+\ \ \ \ }\
+\ \ \ \ # 自定义信道\
+\ \ \ \ if (band_name == "2G") {\
+\ \ \ \ \ \ \ \ channel = "9";\
+\ \ \ \ } else if (band_name == "5G") {\
+\ \ \ \ \ \ \ \ channel = "44";\
+\ \ \ \ }' "$WIFI_UC"
 
-    # 4. 修改 htmode 逻辑 - 替换块（匹配最新语法）
-    echo "=== 当前 htmode 设置逻辑 ==="
-    grep -A 10 -B 5 "htmode" "$WIFI_UC"
-    sed -i '/let htmode = filter(htmode_order, (m) => band\[lc(m)\])\[0\];/,+3c\
-let htmode = filter(htmode_order, (m) => band[lc(m)])[0];\
-if (htmode) {\
-    if (band_name == "5g") {\
-        htmode = "HE160";\
-    } else {\
-        htmode += width;\
-    }\
-} else {\
-    htmode = "NOHT";\
-}' "$WIFI_UC"
+# 4. 插入 txpower 变量（在 lc(band_name) 后）
+sed -i '/band_name = lc(band_name);/a\
+\ \ \ \ let txpower = (band_name == "5g") ? "25" : (band_name == "2g" ? "24" : "");' "$WIFI_UC"
 
-    # 5. 修改 width 逻辑 - 替换块
-    sed -i '/let width = band.max_width;/,+3c\
-let width = band.max_width;\
-if (band_name == "2G") {\
-    width = 20;\
-} else if (band_name == "5G") {\
-    width = 160;\
-} else if (width > 80) {\
-    width = 80;\
-}' "$WIFI_UC"
+# 5. 在 print 的 disabled 行后插入 txpower
+sed -i "/set \$\$ {s}\.disabled='0'/a set \$\$ {s}\.txpower='\$\$ {txpower}'" "$WIFI_UC"
+
+# 6. htmode：5G 固定 HE160
+sed -i '/let htmode = filter(htmode_order, (m) => band\[lc(m)\])\[0\];/,+3c\
+\ \ \ \ let htmode = filter(htmode_order, (m) => band[lc(m)])[0];\
+\ \ \ \ if (htmode) {\
+\ \ \ \ \ \ \ \ if (band_name == "5G") {\
+\ \ \ \ \ \ \ \ \ \ \ \ htmode = "HE160";\
+\ \ \ \ \ \ \ \ } else {\
+\ \ \ \ \ \ \ \ \ \ \ \ htmode += width;\
+\ \ \ \ \ \ \ \ }\
+\ \ \ \ } else {\
+\ \ \ \ \ \ \ \ htmode = "NOHT";\
+\ \ \ \ }' "$WIFI_UC"
+
+# 7. width：2G=20, 5G=160
+sed -i '/let width = band\.max_width;/,+3c\
+\ \ \ \ let width = band.max_width;\
+\ \ \ \ if (band_name == "2G") {\
+\ \ \ \ \ \ \ \ width = 20;\
+\ \ \ \ } else if (band_name == "5G") {\
+\ \ \ \ \ \ \ \ width = 160;\
+\ \ \ \ } else if (width > 80) {\
+\ \ \ \ \ \ \ \ width = 80;\
+\ \ \ \ }' "$WIFI_UC"
     
     # 5. 修改SSID和加密
     sed -i "s/ssid='\${defaults?\\.ssid || \"ImmortalWRT\"}'/ssid='$WRT_SSID'/g" "$WIFI_UC"
