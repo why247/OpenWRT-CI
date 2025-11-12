@@ -23,42 +23,38 @@ elif [ -f "$WIFI_UC" ]; then
     
     echo "开始修改mac80211.uc文件..."
     
-# 1. 国家代码
-    sed -i "s/set \${s}.country='\${country || ''}'/set \${s}.country='US'/g" "$WIFI_UC"
+    # 1. 修改国家代码 - 更精确的匹配
+    # 找到设置country的行并修改
+	sed -i "s/country='.*'/country='US'/g" $WIFI_UC
+    
+# 2. 修改功率设置 - 使用变量，避免 if 在 print 内
+    # 先插入 ucode 计算 txpower（在 lc(band_name) 后，使用小写 band_name）
+    sed -i '/band_name = lc(band_name);/a\
+let txpower = "";\
+if (band_name == "5g") {\
+    txpower = "25";\
+} else if (band_name == "2g") {\
+    txpower = "24";\
+}' "$WIFI_UC"
+    # 然后在 print 的 disabled 行后插入 set（匹配 $$）
+    sed -i "/set \${s}\.disabled='0'/a set \$\$\ {s}\.txpower='\$\$\ {txpower}'" "$WIFI_UC"
 
-    # 2. 功率设置（5G=25, 2G=24）
-    if grep -q "txpower" "$WIFI_UC"; then
-        sed -i '/set \${s}.txpower/d' "$WIFI_UC"  # 先删除旧的
-    fi
-    sed -i "/set \${s}.disabled='0'/a \\
-if (band_name == \"5G\") {\\
-    set \${s}.txpower='25'\\
-} else if (band_name == \"2G\") {\\
-    set \${s}.txpower='24'\\
-}" "$WIFI_UC"
+    # 3. 修改信道设置 - 替换为安全版本 + 自定义逻辑
+    sed -i 's/let channel = rband.default_channel ?? "auto";/let channel = (rband ? rband.default_channel ?? "auto" : "auto");\
+# 自定义信道设置\
+if (band_name == "2G") {\
+    channel = "9";\
+} else if (band_name == "5G") {\
+    channel = "44";\
+}/g' "$WIFI_UC"
 
-    # 3. 信道设置 - 关键修复：插在 rband 定义后，且加 null 保护
-    # 找到 rband 定义行后插入
-    sed -i '/let rband = radio\.bands\[band_name\];/a\
-\ \ \ \ if (rband) {\
-\ \ \ \ \ \ \ \ # 自定义信道设置（仅当 rband 存在时）\
-\ \ \ \ \ \ \ \ if (band_name == "2G") {\
-\ \ \ \ \ \ \ \ \ \ \ \ channel = "9";\
-\ \ \ \ \ \ \ \ } else if (band_name == "5G") {\
-\ \ \ \ \ \ \ \ \ \ \ \ channel = "44";\
-\ \ \ \ \ \ \ \ }\
-\ \ \ \ } else {\
-\ \ \ \ \ \ \ \ channel = "auto";\
-\ \ \ \ }' "$WIFI_UC"
-
-    # 删除原默认 channel 行（避免重复）
-    sed -i '/let channel = rband\.default_channel ?? "auto";/d' "$WIFI_UC"
-
-    # 4. htmode 修复
+    # 4. 修改 htmode 逻辑 - 替换块（匹配最新语法）
+    echo "=== 当前 htmode 设置逻辑 ==="
+    grep -A 10 -B 5 "htmode" "$WIFI_UC"
     sed -i '/let htmode = filter(htmode_order, (m) => band\[lc(m)\])\[0\];/,+3c\
 let htmode = filter(htmode_order, (m) => band[lc(m)])[0];\
 if (htmode) {\
-    if (band_name == "5G") {\
+    if (band_name == "5g") {\
         htmode = "HE160";\
     } else {\
         htmode += width;\
@@ -67,8 +63,8 @@ if (htmode) {\
     htmode = "NOHT";\
 }' "$WIFI_UC"
 
-    # 5. width 修复
-    sed -i '/let width = band\.max_width;/,+2c\
+    # 5. 修改 width 逻辑 - 替换块
+    sed -i '/let width = band.max_width;/,+3c\
 let width = band.max_width;\
 if (band_name == "2G") {\
     width = 20;\
@@ -77,22 +73,22 @@ if (band_name == "2G") {\
 } else if (width > 80) {\
     width = 80;\
 }' "$WIFI_UC"
-
-    # 6. SSID 和密码
+    
+    # 5. 修改SSID和加密
     sed -i "s/ssid='\${defaults?\\.ssid || \"ImmortalWRT\"}'/ssid='$WRT_SSID'/g" "$WIFI_UC"
     sed -i "s/encryption='\${defaults?\\.encryption || \"none\"}'/encryption='psk2'/g" "$WIFI_UC"
     sed -i "s/key='\${defaults?\\.key || \"\"}'/key='$WRT_WORD'/g" "$WIFI_UC"
-
-    echo "修复完成！验证关键修改："
-    echo "=== 信道安全逻辑 ==="
-    grep -A 8 -B 2 "rband.*band_name" "$WIFI_UC" | head -15
-    echo "=== 功率条件逻辑 ==="
-    grep -A 3 "txpower" "$WIFI_UC"
-    echo "=== commit 是否存在 ==="
-    grep "commit wireless" "$WIFI_UC" && echo "OK"
-
-else
-    echo "未找到文件！"
+    
+    echo "修改完成，验证修改结果："
+    echo "=== 国家设置 ==="
+    grep "country" "$WIFI_UC"
+    echo "=== 功率设置 ==="
+    grep "txpower" "$WIFI_UC" || echo "未找到txpower设置"
+    echo "=== 带宽设置逻辑 ==="
+    grep -A 5 -B 5 "htmode.*=" "$WIFI_UC"
+    echo "=== 宽度设置逻辑 ==="
+    grep -A 5 -B 5 "width.*=" "$WIFI_UC"
+    
 fi
 
 
