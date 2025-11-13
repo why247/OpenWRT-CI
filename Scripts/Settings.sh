@@ -27,52 +27,45 @@ elif [ -f "$WIFI_UC" ]; then
     # 找到设置country的行并修改
 	sed -i "s/country='.*'/country='US'/g" $WIFI_UC
     
-# 2. 删除危险的原 channel 行（避免 null 崩溃）
-sed -i '/let channel = rband\.default_channel ?? "auto";/d' "$WIFI_UC"
-
-# 3. 在 rband 定义后，安全插入 channel 逻辑（使用大写 band_name）
-sed -i '/let rband = radio\.bands\[band_name\];/a\
-\ \ \ \ let channel = "auto";\
-\ \ \ \ if (rband && rband.default_channel) {\
-\ \ \ \ \ \ \ \ channel = rband.default_channel;\
-\ \ \ \ }\
-\ \ \ \ # 自定义信道\
-\ \ \ \ if (band_name == "2G") {\
-\ \ \ \ \ \ \ \ channel = "9";\
-\ \ \ \ } else if (band_name == "5G") {\
-\ \ \ \ \ \ \ \ channel = "44";\
-\ \ \ \ }' "$WIFI_UC"
-
-# 4. 插入 txpower 变量（在 lc(band_name) 后）
-sed -i '/band_name = lc(band_name);/a\
-\ \ \ \ let txpower = (band_name == "5g") ? "25" : (band_name == "2g" ? "24" : "");' "$WIFI_UC"
-
-# 5. 在 print 的 disabled 行后插入 txpower
-sed -i "/set \$\$ {s}\.disabled='0'/a set \$\$ {s}\.txpower='\$\$ {txpower}'" "$WIFI_UC"
-
-# 6. htmode：5G 固定 HE160
-sed -i '/let htmode = filter(htmode_order, (m) => band\[lc(m)\])\[0\];/,+3c\
-\ \ \ \ let htmode = filter(htmode_order, (m) => band[lc(m)])[0];\
-\ \ \ \ if (htmode) {\
-\ \ \ \ \ \ \ \ if (band_name == "5G") {\
-\ \ \ \ \ \ \ \ \ \ \ \ htmode = "HE160";\
-\ \ \ \ \ \ \ \ } else {\
-\ \ \ \ \ \ \ \ \ \ \ \ htmode += width;\
-\ \ \ \ \ \ \ \ }\
-\ \ \ \ } else {\
-\ \ \ \ \ \ \ \ htmode = "NOHT";\
-\ \ \ \ }' "$WIFI_UC"
-
-# 7. width：2G=20, 5G=160
-sed -i '/let width = band\.max_width;/,+3c\
-\ \ \ \ let width = band.max_width;\
-\ \ \ \ if (band_name == "2G") {\
-\ \ \ \ \ \ \ \ width = 20;\
-\ \ \ \ } else if (band_name == "5G") {\
-\ \ \ \ \ \ \ \ width = 160;\
-\ \ \ \ } else if (width > 80) {\
-\ \ \ \ \ \ \ \ width = 80;\
-\ \ \ \ }' "$WIFI_UC"
+    # 2. 修改功率设置 - 在正确的位置插入
+    # 先检查是否已存在txpower设置
+    if grep -q "txpower" "$WIFI_UC"; then
+        sed -i "s/txpower='[^']*'/txpower='24'/g" "$WIFI_UC"
+    else
+        # 在disabled行后插入txpower
+        sed -i "/set \${s}.disabled='0'/a set \${s}.txpower='24'" "$WIFI_UC"
+    fi
+    
+    # 3. 修改通道宽度 - 需要更精确的处理
+    # 首先查看当前的htmode设置逻辑
+    echo "=== 当前htmode设置逻辑 ==="
+    grep -A 10 -B 5 "htmode" "$WIFI_UC"
+    
+    # 修改htmode生成逻辑 - 更精确的替换
+    # 找到htmode设置的代码块并替换
+    sed -i '/let htmode = filter(htmode_order, (m) => band\[lc(m)\]\)\[0\];/,+4c\
+        let htmode = filter(htmode_order, (m) => band[lc(m)])[0];\
+        if (htmode) {\
+            if (band_name == "5G") {\
+                htmode = "HE160";\
+            } else {\
+                htmode += width;\
+            }\
+        } else {\
+            htmode = "NOHT";\
+        }' "$WIFI_UC"
+    
+    # 4. 确保5G频段使用160MHz宽度
+    # 修改width设置逻辑
+    sed -i '/let width = band.max_width;/,+5c\
+        let width = band.max_width;\
+        if (band_name == "2G") {\
+            width = 20;\
+        } else if (band_name == "5G") {\
+            width = 160;\
+        } else if (width > 80) {\
+            width = 80;\
+        }' "$WIFI_UC"
     
     # 5. 修改SSID和加密
     sed -i "s/ssid='\${defaults?\\.ssid || \"ImmortalWRT\"}'/ssid='$WRT_SSID'/g" "$WIFI_UC"
