@@ -6,6 +6,20 @@ echo " "
 echo "Applying private customizations..."
 
 #---------------------------------------------------------------
+# 0) 修正 collections 内被写死的主题依赖（例如 luci-light 硬依赖 +luci-theme-aurora）
+#    不管当前写死的是哪个主题，统一纠正为 +luci-theme-bootstrap
+#    必须在下面删除主题源码之前执行，否则依赖找不到包会导致 defconfig/编译报错：
+#    "luci-theme-aurora (no such package): required by: luci-light...[luci-theme-aurora]"
+#---------------------------------------------------------------
+COLLECTIONS_FILES=$(find ../feeds/luci/collections/ -type f -name "Makefile" 2>/dev/null)
+if [ -n "$COLLECTIONS_FILES" ]; then
+	sed -i -E "s/\+luci-theme-[A-Za-z0-9_-]+/+luci-theme-bootstrap/g" $COLLECTIONS_FILES
+	echo "collections default theme dependency normalized to bootstrap!"
+else
+	echo "Warning: feeds/luci/collections not found yet, theme dependency not normalized!"
+fi
+
+#---------------------------------------------------------------
 # 1) 删除 HomeProxy 以及除 Bootstrap 外的其它主题源码
 #    （对应目录名取自各 UPDATE_PACKAGE 克隆下来的仓库名，而非第一个参数）
 #    这样 Handles.sh 里 argon/aurora 的 [ -d ... ] 判断会自然为假，无需改 Handles.sh
