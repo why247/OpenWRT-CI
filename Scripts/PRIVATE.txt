@@ -1,6 +1,6 @@
 #私有配置覆盖，由 Settings.sh 追加到 .config 最后一行生效
-#用 Nikki 替换 HomeProxy，无需改动 GENERAL.txt
-CONFIG_PACKAGE_luci-app-homeproxy=n
-CONFIG_PACKAGE_nikki=y
-CONFIG_PACKAGE_luci-app-nikki=y
-CONFIG_PACKAGE_luci-i18n-nikki-zh-cn=y
+#用 Nikki 替换 HomeProxy，无需改动 #GENERAL.txt
+#CONFIG_PACKAGE_luci-app-homeproxy=n
+#CONFIG_PACKAGE_nikki=y
+#CONFIG_PACKAGE_luci-app-nikki=y
+#CONFIG_PACKAGE_luci-i18n-nikki-zh-cn=y
