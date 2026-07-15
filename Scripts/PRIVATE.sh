@@ -6,21 +6,18 @@ echo " "
 echo "Applying private customizations..."
 
 #---------------------------------------------------------------
-# 0) 修正 collections 内被写死的主题依赖（例如 luci-light 硬依赖 +luci-theme-aurora）
-#    不管当前写死的是哪个主题，统一纠正为 +luci-theme-bootstrap
-#    必须在下面删除主题源码之前执行，否则依赖找不到包会导致 defconfig/编译报错：
-#    "luci-theme-aurora (no such package): required by: luci-light...[luci-theme-aurora]"
+# 1) 先把 collections 下所有 Makefile 里写死的 +luci-theme-任意主题
+#    统一纠正成 +luci-theme-bootstrap（VIKINGYFY 的 immortalwrt 源码里
+#    luci-light 等合集包直接硬编码依赖 luci-theme-aurora，不是通过
+#    Settings.sh 里 "luci-theme-bootstrap → luci-theme-$WRT_THEME" 这种
+#    可替换文本生成的，所以必须在这里单独纠正一次），
+#    确保依赖永远指向不会被删除的 bootstrap，之后才能安全删除其它主题源码
 #---------------------------------------------------------------
-COLLECTIONS_FILES=$(find ../feeds/luci/collections/ -type f -name "Makefile" 2>/dev/null)
-if [ -n "$COLLECTIONS_FILES" ]; then
-	sed -i -E "s/\+luci-theme-[A-Za-z0-9_-]+/+luci-theme-bootstrap/g" $COLLECTIONS_FILES
-	echo "collections default theme dependency normalized to bootstrap!"
-else
-	echo "Warning: feeds/luci/collections not found yet, theme dependency not normalized!"
-fi
+sed -i -E "s/\+luci-theme-[a-zA-Z0-9_-]+/+luci-theme-bootstrap/g" $(find ../feeds/luci/collections/ -type f -name "Makefile")
+echo "collections Makefile theme dependency corrected to bootstrap!"
 
 #---------------------------------------------------------------
-# 1) 删除 HomeProxy 以及除 Bootstrap 外的其它主题源码
+# 2) 删除 HomeProxy 以及除 Bootstrap 外的其它主题源码
 #    （对应目录名取自各 UPDATE_PACKAGE 克隆下来的仓库名，而非第一个参数）
 #    这样 Handles.sh 里 argon/aurora 的 [ -d ... ] 判断会自然为假，无需改 Handles.sh
 #---------------------------------------------------------------
@@ -30,25 +27,8 @@ rm -rf ./luci-theme-argon ./luci-theme-aurora ./luci-app-aurora-config \
 echo "unwanted themes and homeproxy source removed!"
 
 #---------------------------------------------------------------
-# 2) 写入 cpufreq 默认参数
-#    先尝试定位已有的 cpufreq UCI 配置文件；找不到再兜底写入 base-files
-#---------------------------------------------------------------
-CPUFREQ_FILE=$(find . ../feeds -type f -wholename "*/etc/config/cpufreq" 2>/dev/null | head -n1)
-[ -z "$CPUFREQ_FILE" ] && CPUFREQ_FILE="./base-files/files/etc/config/cpufreq"
-mkdir -p "$(dirname "$CPUFREQ_FILE")"
-cat > "$CPUFREQ_FILE" << 'EOF'
-config settings 'cpufreq'
-	option governor0 'performance'
-	option minfreq0 '1382400'
-	option maxfreq0 '1382400'
-
-config settings 'global'
-	option set '1'
-EOF
-echo "cpufreq default settings written to $CPUFREQ_FILE"
-
-#---------------------------------------------------------------
 # 3) 写入 sysctl.conf 网络缓冲区参数
+#    sysctl.conf 本身就是 base-files 自带文件（不是独立包），直接覆盖不会冲突
 #---------------------------------------------------------------
 mkdir -p ./base-files/files/etc
 cat > ./base-files/files/etc/sysctl.conf << 'EOF'
@@ -62,12 +42,36 @@ EOF
 echo "sysctl.conf written!"
 
 #---------------------------------------------------------------
-# 4) 写入无线默认国家代码/信道/频宽/功率
-#    以 uci-defaults 形式随固件写入，首次开机执行一次；
-#    按 band（2g/5g）匹配，不依赖 radio0/radio1 的顺序，
-#    对多设备（MULTI_PROFILE）固件包同样安全
+# 4) cpufreq 默认参数：改用 uci-defaults 首次开机 uci set，而不是编译期
+#    直接写 files/etc/config/cpufreq —— 避免和 cpufreq 包自己安装的
+#    同名文件在 package/install 阶段发生"文件被两个包同时提供"的冲突
 #---------------------------------------------------------------
 mkdir -p ./base-files/files/etc/uci-defaults
+cat > ./base-files/files/etc/uci-defaults/98-custom-cpufreq << 'CEOF'
+#!/bin/sh
+
+uci set cpufreq.cpufreq='settings'
+uci set cpufreq.cpufreq.governor0='performance'
+uci set cpufreq.cpufreq.minfreq0='1382400'
+uci set cpufreq.cpufreq.maxfreq0='1382400'
+
+uci set cpufreq.global='settings'
+uci set cpufreq.global.set='1'
+
+uci commit cpufreq
+
+exit 0
+CEOF
+chmod +x ./base-files/files/etc/uci-defaults/98-custom-cpufreq
+echo "cpufreq uci-defaults written!"
+
+#---------------------------------------------------------------
+# 5) 写入无线默认国家代码/信道/频宽/功率
+#    以 uci-defaults 形式随固件写入，首次开机执行一次；
+#    按 band（2g/5g）匹配，不依赖 radio0/radio1 的顺序，
+#    对多设备（MULTI_PROFILE）固件包同样安全；wifi-no 变体没有
+#    /etc/config/wireless，靠开头的判断直接跳过
+#---------------------------------------------------------------
 cat > ./base-files/files/etc/uci-defaults/99-custom-wireless << 'WEOF'
 #!/bin/sh
 . /lib/functions.sh
