@@ -4,7 +4,25 @@
 
 echo " "
 echo "Applying private customizations..."
-
+echo "Fetching Nikki source code..."
+# 拉取 Nikki 核心程序
+if [ ! -d "./nikki" ]; then
+    git clone --depth=1 --single-branch --branch "main" "https://github.com/nikkinikki-org/OpenWrt-nikki.git" ./nikki_temp
+    # 通常 OpenWrt-nikki 仓库里包含多个包，我们需要把需要的包移出来
+    # 假设仓库结构是 OpenWrt-nikki/nikki 和 OpenWrt-nikki/luci-app-nikki
+    if [ -d "./nikki_temp/nikki" ]; then
+        mv ./nikki_temp/nikki ./nikki
+    fi
+    if [ -d "./nikki_temp/luci-app-nikki" ]; then
+        mv ./nikki_temp/luci-app-nikki ./luci-app-nikki
+    fi
+    # 如果有 i18n 包也移出来
+    if [ -d "./nikki_temp/luci-i18n-nikki-zh-cn" ]; then
+        mv ./nikki_temp/luci-i18n-nikki-zh-cn ./luci-i18n-nikki-zh-cn
+    fi
+    rm -rf ./nikki_temp
+fi
+echo "Nikki source code fetched!"
 #---------------------------------------------------------------
 # 1) 先把 collections 下所有 Makefile 里写死的 +luci-theme-任意主题
 #    统一纠正成 +luci-theme-bootstrap（VIKINGYFY 的 immortalwrt 源码里
