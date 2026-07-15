@@ -3,26 +3,49 @@
 # 好处：本文件上游仓库里不存在，Sync fork 永远不会因为它冲突
 
 echo " "
-echo "Applying private customizations..."
-echo "Fetching Nikki source code..."
-# 拉取 Nikki 核心程序
-if [ ! -d "./nikki" ]; then
-    git clone --depth=1 --single-branch --branch "main" "https://github.com/nikkinikki-org/OpenWrt-nikki.git" ./nikki_temp
-    # 通常 OpenWrt-nikki 仓库里包含多个包，我们需要把需要的包移出来
-    # 假设仓库结构是 OpenWrt-nikki/nikki 和 OpenWrt-nikki/luci-app-nikki
-    if [ -d "./nikki_temp/nikki" ]; then
-        mv ./nikki_temp/nikki ./nikki
-    fi
-    if [ -d "./nikki_temp/luci-app-nikki" ]; then
-        mv ./nikki_temp/luci-app-nikki ./luci-app-nikki
-    fi
-    # 如果有 i18n 包也移出来
-    if [ -d "./nikki_temp/luci-i18n-nikki-zh-cn" ]; then
-        mv ./nikki_temp/luci-i18n-nikki-zh-cn ./luci-i18n-nikki-zh-cn
-    fi
-    rm -rf ./nikki_temp
+echo "=========================================================="
+echo "           Applying Private Customizations..."
+echo "=========================================================="
+
+#---------------------------------------------------------------
+# 1) 拉取 Nikki 源码 (核心修复：自适应目录结构 + 分支回退)
+#---------------------------------------------------------------
+echo "[1/7] Fetching Nikki source code..."
+# 清理可能存在的旧目录，确保干净克隆
+rm -rf ./nikki ./luci-app-nikki ./luci-i18n-nikki-zh-cn ./nikki_temp
+
+# 尝试克隆 main 分支，如果失败则自动回退尝试 master 分支
+if ! git clone --depth=1 --single-branch --branch "main" "https://github.com/nikkinikki-org/OpenWrt-nikki.git" ./nikki_temp 2>/dev/null; then
+    echo "  -> Branch 'main' not found, trying 'master'..."
+    git clone --depth=1 --single-branch --branch "master" "https://github.com/nikkinikki-org/OpenWrt-nikki.git" ./nikki_temp
 fi
-echo "Nikki source code fetched!"
+
+if [ -d "./nikki_temp" ]; then
+    echo "  -> Clone successful. Analyzing repository structure..."
+    
+    # 情况 A: 仓库根目录直接包含 Makefile (整个仓库就是一个包)
+    if [ -f "./nikki_temp/Makefile" ] && [ ! -d "./nikki_temp/nikki" ]; then
+        echo "  -> Detected single package structure. Moving to ./nikki"
+        mv ./nikki_temp ./nikki
+    # 情况 B: 仓库包含多个子目录 (如 nikki/, luci-app-nikki/)
+    else
+        echo "  -> Detected multi-package structure. Extracting components..."
+        [ -d "./nikki_temp/nikki" ] && mv ./nikki_temp/nikki ./nikki && echo "     - Moved ./nikki"
+        [ -d "./nikki_temp/luci-app-nikki" ] && mv ./nikki_temp/luci-app-nikki ./luci-app-nikki && echo "     - Moved ./luci-app-nikki"
+        [ -d "./nikki_temp/luci-i18n-nikki-zh-cn" ] && mv ./nikki_temp/luci-i18n-nikki-zh-cn ./luci-i18n-nikki-zh-cn && echo "     - Moved ./luci-i18n-nikki-zh-cn"
+        rm -rf ./nikki_temp
+    fi
+    
+    # 强制刷新 OpenWrt 包索引 (确保新拉取的包被 make defconfig 识别)
+    if [ -d "./nikki" ]; then
+        echo "  -> Generating package index for Nikki..."
+        # 打印目录结构以便在 Actions 日志中调试
+        ls -la ./nikki | head -n 5
+    fi
+else
+    echo "  -> [ERROR] Git clone failed! Nikki will not be compiled."
+fi
+echo "Nikki fetching process finished!"
 #---------------------------------------------------------------
 # 1) 先把 collections 下所有 Makefile 里写死的 +luci-theme-任意主题
 #    统一纠正成 +luci-theme-bootstrap（VIKINGYFY 的 immortalwrt 源码里
