@@ -111,3 +111,23 @@ exit 0
 WEOF
 chmod +x ./base-files/files/etc/uci-defaults/99-custom-wireless
 echo "wireless country/channel/power defaults written!"
+
+#---------------------------------------------------------------
+# 8) 强制去除 LuCI 前端的 "未设置密码" 警告 (空密码专用)
+#    原理：在编译阶段，用 sed 把 luci-mod-status 中负责渲染
+#    密码警告框的 JavaScript 逻辑替换为空。
+#---------------------------------------------------------------
+echo "[8/8] Removing LuCI 'No password set' warning..."
+
+# 查找 luci-mod-status 下的 status.js 文件
+STATUS_JS=$(find ../feeds/luci/modules/luci-mod-status/htdocs/luci-static/resources/view/status/ -type f -name "status.js" -print -quit 2>/dev/null)
+
+if [ -n "$STATUS_JS" ]; then
+    echo "  -> Found status.js, patching..."
+    # 将包含 'No password set' 或 '未设置密码' 的整段 JS 逻辑替换为空
+    # 注意：不同版本的 LuCI 这段代码可能略有差异，这里覆盖了常见的匹配模式
+    sed -i -E '/No password set|尚未设置密码|未设置密码/,/^[[:space:]]*\}\);/d' "$STATUS_JS"
+    echo "  -> Warning logic successfully removed!"
+else
+    echo "  -> [WARNING] status.js not found! Skipping patch."
+fi
