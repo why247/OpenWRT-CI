@@ -26,7 +26,7 @@ echo "collections Makefile theme dependency corrected to bootstrap!"
 #---------------------------------------------------------------
 rm -rf ./luci-theme-argon ./luci-theme-aurora ./luci-app-aurora-config \
        ./luci-theme-kucat ./luci-app-kucat-config ./luci-theme-noobwrt \
-       ./luci-theme-shadcn ./luci-theme-fluent #./homeproxy
+       ./luci-theme-shadcn ./luci-theme-fluent ./homeproxy
 echo "unwanted themes and homeproxy source removed!"
 
 #---------------------------------------------------------------
