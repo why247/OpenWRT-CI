@@ -1,0 +1,270 @@
+#!/bin/bash
+# 私有定制脚本（上游仓库里不存在这个文件，Sync fork 永远不会因为它冲突）
+# 由 Scripts/Packages.sh 末尾 source 执行（CWD 见下方第 0 节自动探测）
+#
+# 本文件承载全部私有定制，共 6 节：
+#   1) 主题：只保留 Bootstrap
+#   2) 删除 HomeProxy（改用 Nikki，包选择写在 Config/PRIVATE.txt）
+#   3) /etc/config/cpufreq 固定为 performance + 1382400
+#   4) /etc/sysctl.conf 网络缓冲区参数
+#   5) 无线：2.4G/5G 国家代码、信道、频宽、发射功率
+#   6) 去掉 LuCI “未设置密码” 警告（配合空密码使用）
+#   （编号与下面注释里的 [n/6] 对应，方便在 CI 日志里核对）
+
+echo " "
+echo "=============================================="
+echo "Applying private customizations..."
+echo "=============================================="
+
+#---------------------------------------------------------------
+# 0) 定位 wrt 源码树
+#    上游不同版本的 Packages.sh 工作目录不一样：
+#      新版：CWD = wrt/        （脚本里写 ./package/ 前缀）
+#      旧版：CWD = wrt/package/（脚本里写直接相对路径）
+#    这里自动探测，Sync fork 后本脚本不会因为目录变化而静默失效。
+#---------------------------------------------------------------
+if [ -d "./package/base-files" ]; then
+	WRT_DIR="$(pwd)"
+elif [ -d "./base-files" ]; then
+	WRT_DIR="$(cd .. && pwd)"
+else
+	echo "[ERROR] WRT source tree not found, private customizations skipped!"
+	return 0 2>/dev/null || exit 0
+fi
+
+PKG_DIR="$WRT_DIR/package"
+FEEDS_DIR="$WRT_DIR/feeds"
+echo "WRT source tree: $WRT_DIR"
+
+#---------------------------------------------------------------
+# [1/6] 主题只保留 Bootstrap
+#    官方 luci 合集包（collections/luci-light 等）依赖的是
+#    +luci-theme-bootstrap，Settings.sh 会把它替换成 luci-theme-$WRT_THEME。
+#    这里统一改回 bootstrap，保证无论工作流里 WRT_THEME 写成什么，
+#    被依赖、被安装的都只有 bootstrap。
+#    （luci-base 默认 /etc/config/luci 里 mediaurlbase 本身就是
+#      /luci-static/bootstrap，主题包自带的 30_luci-theme-* 也只会在
+#      被安装时才运行，所以只要安装集里只剩 bootstrap 就一定是 bootstrap）
+#---------------------------------------------------------------
+if [ -d "$FEEDS_DIR/luci/collections" ]; then
+	# 用 BRE 写法（+ 在 BRE 里就是普通字符），不吃 GNU sed 的扩展转义
+	find "$FEEDS_DIR/luci/collections/" -type f -name "Makefile" \
+		-exec sed -i "s/+luci-theme-[a-zA-Z0-9_-][a-zA-Z0-9_-]*/+luci-theme-bootstrap/g" {} +
+	echo "[1/6] collections theme dependency corrected to bootstrap!"
+else
+	echo "[1/6] [WARN] $FEEDS_DIR/luci/collections not found, skipped!"
+fi
+
+#---------------------------------------------------------------
+# [2/6] 删除 HomeProxy 源码 + 除 Bootstrap 外的其它主题源码
+#    主题目录名 = UPDATE_PACKAGE 克隆下来的仓库名（不是第一个参数），
+#    例如 "aurora" 克隆出的是 luci-theme-aurora。
+#    用通配删除 package/ 下的 luci-theme-*，这样上游以后新增主题也会被清掉；
+#    -maxdepth 1 不会碰到 package/feeds/luci/ 里 feed 自身的主题（那些只是
+#    install 出来的软链，没被任何合集依赖、没被 .config 选中就不会编译）。
+#---------------------------------------------------------------
+find "$PKG_DIR" -maxdepth 1 -type d -name 'luci-theme-*' ! -name 'luci-theme-bootstrap' \
+	-exec rm -rf {} + 2>/dev/null
+# 主题配套的配置插件目录名与 UPDATE_PACKAGE 参数同名，这里显式列出，
+# 故意不用 luci-app-*-config 通配，免得上游以后新增别家的 *-config 被误删
+for THEME_CFG in luci-app-aurora-config luci-app-kucat-config; do
+	if [ -d "$PKG_DIR/$THEME_CFG" ]; then
+		rm -rf "$PKG_DIR/$THEME_CFG"
+		echo "    removed theme config app: $THEME_CFG"
+	fi
+done
+echo "[2/6] non-bootstrap theme sources removed!"
+
+#    HomeProxy：源码在 VIKINGYFY/packages 克隆体里的 packages/luci-app-homeproxy
+#    （注意目录名是 luci-app-homeproxy，不是 homeproxy）。
+#    feed 自带的 luci-app-homeproxy 已经被 Packages.sh 里
+#    UPDATE_PACKAGE "viking" 的删除列表清掉了，这里再清一次残留的软链，
+#    顺带避免 Handles.sh 去下载 homeproxy 的规则集/面板（几 MB，用不上）。
+for HP_PATH in "$PKG_DIR/packages/luci-app-homeproxy" \
+               "$PKG_DIR/luci-app-homeproxy" \
+               "$PKG_DIR/feeds/luci/luci-app-homeproxy" \
+               "$PKG_DIR/feeds/packages/luci-app-homeproxy"; do
+	if [ -e "$HP_PATH" ] || [ -L "$HP_PATH" ]; then
+		rm -rf "$HP_PATH"
+		echo "    removed homeproxy: $HP_PATH"
+	fi
+done
+echo "[2/6] HomeProxy source removed (Nikki is enabled via Config/PRIVATE.txt)!"
+
+#---------------------------------------------------------------
+# [3/6] /etc/sysctl.conf 网络缓冲区参数
+#    sysctl.conf 是 base-files 自带的文件（不是独立包），直接覆盖不会冲突；
+#    上游该文件只有注释，覆盖不会丢掉有效配置。
+#---------------------------------------------------------------
+mkdir -p "$PKG_DIR/base-files/files/etc"
+cat > "$PKG_DIR/base-files/files/etc/sysctl.conf" << 'EOF'
+net.core.rmem_max = 16777216
+net.core.wmem_max = 16777216
+net.core.rmem_default = 4194304
+net.core.wmem_default = 4194304
+net.ipv4.udp_rmem_min = 8192
+net.ipv4.udp_wmem_min = 8192
+EOF
+echo "[3/6] sysctl.conf written!"
+
+#---------------------------------------------------------------
+# [4/6] /etc/config/cpufreq 固定为 performance + 1382400
+#    直接覆盖 cpufreq 包自带的默认配置文件（package/emortal/cpufreq/files/
+#    cpufreq.config，包 Makefile 用 INSTALL_CONF 把它装成 /etc/config/cpufreq），
+#    这样装进固件的 /etc/config/cpufreq 就是要求的内容。
+#    额外好处：global.set=1 会让 cpufreq 包自带的 /etc/uci-defaults/10-cpufreq
+#    开机自动探测逻辑直接退出，不会再改掉这里的值。
+#---------------------------------------------------------------
+CPUFREQ_CFG="$PKG_DIR/emortal/cpufreq/files/cpufreq.config"
+if [ -f "$CPUFREQ_CFG" ]; then
+	cat > "$CPUFREQ_CFG" << 'EOF'
+config settings 'cpufreq'
+	option governor0 'performance'
+	option minfreq0 '1382400'
+	option maxfreq0 '1382400'
+
+config settings 'global'
+	option set '1'
+EOF
+	echo "[4/6] cpufreq default config overwritten!"
+else
+	echo "[4/6] [WARN] $CPUFREQ_CFG not found (upstream moved it?), uci-defaults fallback still applies!"
+fi
+
+# 兜底：首次开机再 uci set 一遍（幂等）。
+# 覆盖两种情况下上面的文件覆盖不生效的场景：包没被选中（x86 上 cpufreq 依赖
+# arm/aarch64，装了也没有这个文件）、或者升级时保留了旧 /etc/config/cpufreq。
+mkdir -p "$PKG_DIR/base-files/files/etc/uci-defaults"
+cat > "$PKG_DIR/base-files/files/etc/uci-defaults/99z-custom-cpufreq" << 'CEOF'
+#!/bin/sh
+
+uci set cpufreq.cpufreq='settings'
+uci set cpufreq.cpufreq.governor0='performance'
+uci set cpufreq.cpufreq.minfreq0='1382400'
+uci set cpufreq.cpufreq.maxfreq0='1382400'
+
+uci set cpufreq.global='settings'
+uci set cpufreq.global.set='1'
+
+uci commit cpufreq
+
+exit 0
+CEOF
+chmod +x "$PKG_DIR/base-files/files/etc/uci-defaults/99z-custom-cpufreq"
+echo "[4/6] cpufreq uci-defaults fallback written!"
+
+#---------------------------------------------------------------
+# [5/6] 无线默认值：2.4G / 5G 国家代码 us，信道、频宽、发射功率
+#    主路径：改生成器 mac80211.uc（/etc/config/wireless 由它生成：
+#    /sbin/wifi config -> ucode /lib/wifi/mac80211.uc | uci -q batch）。
+#    值直接写进生成结果，不依赖任何开机脚本的执行时机，最可靠；
+#    上游 Settings.sh 改默认 SSID/密码用的也是同一个文件。
+#    原生逻辑：2.4G 强制 20MHz，5G 频宽上限被压到 80MHz，且完全不写 txpower，
+#    所以这里必须自己改。
+#---------------------------------------------------------------
+WIFI_UC="$PKG_DIR/network/config/wifi-scripts/files/lib/wifi/mac80211.uc"
+if [ -f "$WIFI_UC" ]; then
+	# 2.4G -> 信道 9 / 20MHz；5G -> 信道 44 / 160MHz
+	# （band_name 此时还是大写，lc() 在后面才调用；htmode 由 width 拼出来，
+	#   所以 5G 的 width=160 会生成 HE160，2.4G 保持 HE20）
+	# 5G 的 width 写成 band.max_width > 160 ? 160 : band.max_width，
+	# 即"取网卡上报能力、上限 160"，这样同平台镜像里若有只支持 80MHz 的网卡
+	# （例如某些 x86 网卡），也不会被写出驱动不支持的模式导致无线起不来。
+	# 注意：sed 的 c\ 会吃掉行首空白，所以插入的这几行没有缩进。
+	# ucode 不依赖缩进，功能不受影响。
+	sed -i '/if (band_name == "2G")/,/width = 80;/c\
+if (band_name == "2G") {\
+width = 20;\
+channel = 9;\
+}\
+else if (band_name == "5G") {\
+width = band.max_width > 160 ? 160 : band.max_width;\
+channel = 44;\
+}\
+else if (width > 80)\
+width = 80;' "$WIFI_UC"
+
+	# 国家代码统一 US；并补上 txpower（2.4G 24dBm / 5G 25dBm / 其它频段 0=驱动默认）
+	sed -i "s@set \${s}\.country='\${country || 'CN'}'@set \${s}.country='US'\nset \${s}.txpower='\${band_name == '2g' ? 24 : (band_name == '5g' ? 25 : 0)}'@" "$WIFI_UC"
+
+	if grep -q 'channel = 9;' "$WIFI_UC" && grep -q 'channel = 44;' "$WIFI_UC" \
+		&& grep -q "country='US'" "$WIFI_UC" && grep -q 'txpower' "$WIFI_UC"; then
+		echo "[5/6] wifi generator patched (2.4G: US ch9 HE20 24dBm, 5G: US ch44 up-to-HE160 25dBm)!"
+	else
+		echo "[5/6] [WARN] wifi generator patch did not fully apply (upstream mac80211.uc changed?), relying on uci-defaults!"
+	fi
+else
+	echo "[5/6] [WARN] $WIFI_UC not found, relying on uci-defaults!"
+fi
+
+# 兜底：首次开机（含刷机后保留旧配置的场景）再 uci set 一遍。
+# 按 band 匹配，不依赖 radio0/radio1 顺序；非 AX 网卡不动 htmode，
+# 避免给出驱动不支持的模式（x86 上的 AC 网卡等）。
+cat > "$PKG_DIR/base-files/files/etc/uci-defaults/99z-custom-wireless" << 'WEOF'
+#!/bin/sh
+. /lib/functions.sh
+
+[ -f /etc/config/wireless ] || exit 0
+
+configure_wifi() {
+	local device="$1"
+	local band htmode
+
+	config_get band "$device" band
+	config_get htmode "$device" htmode
+
+	case "$band" in
+	2g)
+		uci set wireless.$device.country='US'
+		uci set wireless.$device.channel='9'
+		uci set wireless.$device.txpower='24'
+		case "$htmode" in
+		HE*) uci set wireless.$device.htmode='HE20' ;;
+		esac
+		;;
+	5g)
+		uci set wireless.$device.country='US'
+		uci set wireless.$device.channel='44'
+		uci set wireless.$device.txpower='25'
+		case "$htmode" in
+		HE*) uci set wireless.$device.htmode='HE160' ;;
+		esac
+		;;
+	esac
+}
+
+config_load wireless
+config_foreach configure_wifi wifi-device
+uci commit wireless
+
+exit 0
+WEOF
+chmod +x "$PKG_DIR/base-files/files/etc/uci-defaults/99z-custom-wireless"
+echo "[5/6] wireless uci-defaults fallback written!"
+
+#---------------------------------------------------------------
+# [6/6] 去掉 LuCI “未设置密码” 警告（空密码专用）
+#    提示由主题模板渲染：登录后 header.ut 里判断
+#      getuid() == 0 && getspnam('root')?.pwdp === ''  -> 显示警告
+#    （中文文案 “尚未设置密码。请设置管理员密码以保护此设备。” / “转到密码配置…”）
+#    这里把判断条件替换成 false，模板结构不动，只在编译期改模板；
+#    需要注意这只去掉提示，root 仍然是空密码，能访问到 LuCI 的人就能登录。
+#    主题模板在 luci feed 里，Settings.sh 也是直接改 feed 源，且
+#    feeds install 出来的 package/feeds/... 是软链，改 feed 生效。
+#---------------------------------------------------------------
+if [ -d "$FEEDS_DIR/luci/themes" ]; then
+	find "$FEEDS_DIR/luci/themes" -type f \( -name 'header.ut' -o -name 'notices.ut' \) \
+		-exec sed -i "s@getuid() == 0 && getspnam('root')?.pwdp === ''@false@" {} +
+
+	if grep -rq "getuid() == 0 && getspnam" "$FEEDS_DIR/luci/themes" 2>/dev/null; then
+		echo "[6/6] [WARN] password warning still present in some theme template!"
+	else
+		echo "[6/6] LuCI 'no password set' warning removed!"
+	fi
+else
+	echo "[6/6] [WARN] $FEEDS_DIR/luci/themes not found, skipped!"
+fi
+
+echo "=============================================="
+echo "Private customizations applied!"
+echo "=============================================="
