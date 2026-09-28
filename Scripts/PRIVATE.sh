@@ -2,7 +2,9 @@
 # 私有定制脚本（上游仓库里不存在这个文件，Sync fork 永远不会因为它冲突）
 # 由 Scripts/Packages.sh 末尾 source 执行（CWD 见下方第 0 节自动探测）
 #
-# 本文件承载全部私有定制，共 6 节：
+# 本文件承载全部私有定制，共 6 节 + 1 个前置步骤：
+#   0) 前置：中和上游 Settings.sh 的主题逻辑（它在本脚本之后执行，
+#      不中和的话 [1/6] 的改动会被它覆盖回去）
 #   1) 主题：只保留 Bootstrap
 #   2) 删除 HomeProxy（改用 Nikki，包选择写在 Config/PRIVATE.txt）
 #   3) /etc/config/cpufreq 固定为 performance + 1382400
@@ -37,11 +39,40 @@ FEEDS_DIR="$WRT_DIR/feeds"
 echo "WRT source tree: $WRT_DIR"
 
 #---------------------------------------------------------------
+# [0/6] 前置：中和上游 Settings.sh 的主题逻辑
+#    上游 Settings.sh 在本脚本之后执行，会做两件事：
+#      1) 把 feeds/luci/collections 里的 luci-theme-bootstrap 替换成
+#         luci-theme-$WRT_THEME
+#      2) 往 .config 里追加 CONFIG_PACKAGE_luci-theme-$WRT_THEME 和
+#         CONFIG_PACKAGE_luci-app-$WRT_THEME-config
+#    [1/6][2/6] 在本脚本执行时就已做完，拦不住之后执行的 Settings.sh，
+#    所以这里直接把 Settings.sh 文件里的 luci-theme-$WRT_THEME
+#    写死成 luci-theme-bootstrap。
+#    只改 runner 工作区的临时文件，不动 git，Sync fork 不冲突；
+#    万一上游改了 Settings.sh 的写法导致这里 sed 对不上，它会自动空转，
+#    [1/6][2/6] 仍是兜底，CI 日志里能看到 [WARN]。
+#---------------------------------------------------------------
+SETTINGS_SH=""
+for CAND in "$GITHUB_WORKSPACE/Scripts/Settings.sh" "$WRT_DIR/../Scripts/Settings.sh"; do
+	if [ -f "$CAND" ]; then
+		SETTINGS_SH="$CAND"
+		break
+	fi
+done
+if [ -n "$SETTINGS_SH" ]; then
+	# \$ 转义保证匹配的是字面量的 $WRT_THEME，而不是 sed 的行尾锚点
+	sed -i 's/luci-theme-\$WRT_THEME/luci-theme-bootstrap/g' "$SETTINGS_SH"
+	echo "[0/6] Settings.sh theme logic neutralized -> bootstrap ($SETTINGS_SH)"
+else
+	echo "[0/6] [WARN] Settings.sh not found, theme neutralization skipped!"
+fi
+
+#---------------------------------------------------------------
 # [1/6] 主题只保留 Bootstrap
 #    官方 luci 合集包（collections/luci-light 等）依赖的是
-#    +luci-theme-bootstrap，Settings.sh 会把它替换成 luci-theme-$WRT_THEME。
-#    这里统一改回 bootstrap，保证无论工作流里 WRT_THEME 写成什么，
-#    被依赖、被安装的都只有 bootstrap。
+#    +luci-theme-bootstrap。上游 Settings.sh 原本会在本脚本之后把它
+#    替换成 luci-theme-$WRT_THEME，已由前面的 [0/6] 中和；
+#    这里再统一改回 bootstrap 作为兜底，保证被依赖、被安装的只有 bootstrap。
 #    （luci-base 默认 /etc/config/luci 里 mediaurlbase 本身就是
 #      /luci-static/bootstrap，主题包自带的 30_luci-theme-* 也只会在
 #      被安装时才运行，所以只要安装集里只剩 bootstrap 就一定是 bootstrap）
