@@ -6,7 +6,7 @@
 #   0) 前置：中和上游 Settings.sh 的主题逻辑（它在本脚本之后执行，
 #      不中和的话 [1/6] 的改动会被它覆盖回去）
 #   1) 主题：只保留 Bootstrap
-#   2) 删除 HomeProxy（改用 Nikki，包选择写在 Config/PRIVATE.txt）
+#   2) 删除除 Bootstrap 外的其它主题源码（HomeProxy 保留，与 Nikki 共存）
 #   3) /etc/config/cpufreq 固定为 performance + 1382400
 #   4) /etc/sysctl.conf 网络缓冲区参数
 #   5) 无线：2.4G/5G 国家代码、信道、频宽、发射功率
@@ -87,7 +87,7 @@ else
 fi
 
 #---------------------------------------------------------------
-# [2/6] 删除 HomeProxy 源码 + 除 Bootstrap 外的其它主题源码
+# [2/6] 删除除 Bootstrap 外的其它主题源码（HomeProxy 保留，与 Nikki 共存）
 #    主题目录名 = UPDATE_PACKAGE 克隆下来的仓库名（不是第一个参数），
 #    例如 "aurora" 克隆出的是 luci-theme-aurora。
 #    用通配删除 package/ 下的 luci-theme-*，这样上游以后新增主题也会被清掉；
@@ -105,22 +105,9 @@ for THEME_CFG in luci-app-aurora-config luci-app-kucat-config; do
 	fi
 done
 echo "[2/6] non-bootstrap theme sources removed!"
-
-#    HomeProxy：源码在 VIKINGYFY/packages 克隆体里的 packages/luci-app-homeproxy
-#    （注意目录名是 luci-app-homeproxy，不是 homeproxy）。
-#    feed 自带的 luci-app-homeproxy 已经被 Packages.sh 里
-#    UPDATE_PACKAGE "viking" 的删除列表清掉了，这里再清一次残留的软链，
-#    顺带避免 Handles.sh 去下载 homeproxy 的规则集/面板（几 MB，用不上）。
-for HP_PATH in "$PKG_DIR/packages/luci-app-homeproxy" \
-               "$PKG_DIR/luci-app-homeproxy" \
-               "$PKG_DIR/feeds/luci/luci-app-homeproxy" \
-               "$PKG_DIR/feeds/packages/luci-app-homeproxy"; do
-	if [ -e "$HP_PATH" ] || [ -L "$HP_PATH" ]; then
-		rm -rf "$HP_PATH"
-		echo "    removed homeproxy: $HP_PATH"
-	fi
-done
-echo "[2/6] HomeProxy source removed (Nikki is enabled via Config/PRIVATE.txt)!"
+#    HomeProxy 保留：源码在 VIKINGYFY/packages 克隆体里的 packages/luci-app-homeproxy，
+#    包选择由 Config/GENERAL.txt 的 luci-app-homeproxy=y 控制（PRIVATE.txt 不再覆盖），
+#    与 Nikki 共存（nikki 用 mihomo 内核，homeproxy 用 sing-box 内核，互不冲突）。
 
 #---------------------------------------------------------------
 # [3/6] /etc/sysctl.conf 网络缓冲区参数
@@ -185,7 +172,7 @@ chmod +x "$PKG_DIR/base-files/files/etc/uci-defaults/99z-custom-cpufreq"
 echo "[4/6] cpufreq uci-defaults fallback written!"
 
 #---------------------------------------------------------------
-# [5/6] 无线默认值：2.4G / 5G 国家代码 us，信道、频宽、发射功率
+# [5/6] 无线默认值：2.4G / 5G 国家代码 US，信道、频宽、发射功率，SSID/密码并启用
 #    主路径：改生成器 mac80211.uc（/etc/config/wireless 由它生成：
 #    /sbin/wifi config -> ucode /lib/wifi/mac80211.uc | uci -q batch）。
 #    值直接写进生成结果，不依赖任何开机脚本的执行时机，最可靠；
@@ -216,7 +203,7 @@ else if (width > 80)\
 width = 80;' "$WIFI_UC"
 
 	# 国家代码统一 US；并补上 txpower（2.4G 24dBm / 5G 25dBm / 其它频段 0=驱动默认）
-	sed -i "s@set \${s}\.country='\${country || 'CN'}'@set \${s}.country='US'\nset \${s}.txpower='\${band_name == '2g' ? 24 : (band_name == '5g' ? 25 : 0)}'@" "$WIFI_UC"
+	sed -i "s@set \${s}\.country='\${country || ''}'@set \${s}.country='US'\nset \${s}.txpower='\${band_name == '2g' ? 24 : (band_name == '5g' ? 25 : 0)}'@" "$WIFI_UC"
 
 	if grep -q 'channel = 9;' "$WIFI_UC" && grep -q 'channel = 44;' "$WIFI_UC" \
 		&& grep -q "country='US'" "$WIFI_UC" && grep -q 'txpower' "$WIFI_UC"; then
@@ -231,6 +218,8 @@ fi
 # 兜底：首次开机（含刷机后保留旧配置的场景）再 uci set 一遍。
 # 按 band 匹配，不依赖 radio0/radio1 顺序；非 AX 网卡不动 htmode，
 # 避免给出驱动不支持的模式（x86 上的 AC 网卡等）。
+# 同时把所有 AP 接口的 SSID/密码写好并启用（生成器默认 disabled=1 不广播，
+# 不在这里启用的话刷机后搜不到 WiFi）。
 cat > "$PKG_DIR/base-files/files/etc/uci-defaults/99z-custom-wireless" << 'WEOF'
 #!/bin/sh
 . /lib/functions.sh
@@ -264,8 +253,23 @@ configure_wifi() {
 	esac
 }
 
+# 无线网络：统一 SSID/密码并启用
+configure_iface() {
+	local iface="$1"
+	local mode
+
+	config_get mode "$iface" mode
+	[ "$mode" = "ap" ] || return 0
+
+	uci set wireless.$iface.ssid='jy'
+	uci set wireless.$iface.encryption='psk2'
+	uci set wireless.$iface.key='123456789@'
+	uci set wireless.$iface.disabled='0'
+}
+
 config_load wireless
 config_foreach configure_wifi wifi-device
+config_foreach configure_iface wifi-iface
 uci commit wireless
 
 exit 0
