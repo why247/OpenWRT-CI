@@ -303,3 +303,8 @@ fi
 echo "=============================================="
 echo "Private customizations applied!"
 echo "=============================================="
+
+# HomeProxy redirect/tproxy 改造
+# 源码：VIKINGYFY/packages 的 main 分支，luci-app-homeproxy 在仓库根目录
+HP_SRC="$PKG_DIR/VIKINGYFY-packages/luci-app-homeproxy"
+sh "$GITHUB_WORKSPACE/Scripts/homeproxy-rt/apply-patches.sh" "$HP_SRC"
