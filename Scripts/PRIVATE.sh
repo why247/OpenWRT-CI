@@ -105,7 +105,8 @@ for THEME_CFG in luci-app-aurora-config luci-app-kucat-config; do
 	fi
 done
 echo "[2/6] non-bootstrap theme sources removed!"
-#    HomeProxy 保留：源码在 VIKINGYFY/packages 克隆体里的 packages/luci-app-homeproxy，
+#    HomeProxy 保留：源码在 $PKG_DIR/packages/luci-app-homeproxy
+#    （UPDATE_PACKAGE "viking" 把 VIKINGYFY/packages 整个 clone 到 package/packages），
 #    包选择由 Config/GENERAL.txt 的 luci-app-homeproxy=y 控制（PRIVATE.txt 不再覆盖），
 #    与 Nikki 共存（nikki 用 mihomo 内核，homeproxy 用 sing-box 内核，互不冲突）。
 
@@ -306,6 +307,7 @@ echo "Private customizations applied!"
 echo "=============================================="
 
 # HomeProxy redirect/tproxy 改造
-# 源码：VIKINGYFY/packages 的 main 分支，luci-app-homeproxy 在仓库根目录
-HP_SRC="$PKG_DIR/VIKINGYFY-packages/luci-app-homeproxy"
+# UPDATE_PACKAGE 把 VIKINGYFY/packages（main 分支）整个 clone 到 $PKG_DIR/packages，
+# luci-app-homeproxy 在仓库根目录
+HP_SRC="$PKG_DIR/packages/luci-app-homeproxy"
 sh "$GITHUB_WORKSPACE/Scripts/homeproxy-rt/apply-patches.sh" "$HP_SRC"
