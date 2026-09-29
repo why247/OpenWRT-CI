@@ -122,6 +122,7 @@ net.core.rmem_default = 4194304
 net.core.wmem_default = 4194304
 net.ipv4.udp_rmem_min = 8192
 net.ipv4.udp_wmem_min = 8192
+net.core.default_qdisc = fq
 EOF
 echo "[3/6] sysctl.conf written!"
 
