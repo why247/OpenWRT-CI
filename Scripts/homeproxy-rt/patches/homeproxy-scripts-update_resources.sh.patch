@@ -1,5 +1,5 @@
---- base/root/etc/homeproxy/scripts/update_resources.sh	2026-09-30 11:23:18.470498580 +0800
-+++ modified/root/etc/homeproxy/scripts/update_resources.sh	2026-09-30 16:29:04.760979555 +0800
+--- a/etc/homeproxy/scripts/update_resources.sh
++++ b/etc/homeproxy/scripts/update_resources.sh
 @@ -10,10 +10,12 @@
  RUN_DIR="${RUN_DIR:-/var/run/$NAME}"
  LOG_PATH="$RUN_DIR/$NAME.log"
@@ -163,3 +163,20 @@
  update_dashboard || mark_failed "dashboard"
  
  if [ -n "$FAILED_BRANCHES" ]; then
+@@ -241,4 +250,16 @@
+ 	finish 3
+ fi
+ 
++# Refresh firewall rules if CN IPs were updated (nftables embeds the CIDRs)
++case "$UPDATED_BRANCHES" in
++	*cn_ip*)
++		log "[RESOURCES] cn_ip updated, refreshing firewall rules."
++		if ucode "/etc/homeproxy/scripts/firewall_pre.uc" 2>/dev/null; then
++			fw4 reload >/dev/null 2>&1 && log "[RESOURCES] Firewall reloaded." || log "[RESOURCES] Firewall reload failed."
++		else
++			log "[RESOURCES] Failed to regenerate firewall rules."
++		fi
++		;;
++esac
++
+ finish 0

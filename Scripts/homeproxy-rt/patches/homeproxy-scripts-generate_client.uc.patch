@@ -108,20 +108,7 @@
  
  	push_route(rules, control.direct_source, 'direct-out');
  
-@@ -395,12 +397,6 @@
- function add_mainland_rule_sets(rule_sets) {
- 	push(rule_sets, {
- 		type: 'local',
--		tag: 'geoip-cn',
--		format: 'binary',
--		path: HP_DIR + '/resources/geoip_cn.srs'
--	});
--	push(rule_sets, {
--		type: 'local',
- 		tag: 'geosite-cn',
- 		format: 'binary',
- 		path: HP_DIR + '/resources/geosite_cn.srs'
-@@ -425,15 +421,23 @@
+@@ -425,15 +427,23 @@
  
  function generate_outbound(node) {
  	const outbound = renderOutbound(node);
@@ -147,20 +134,41 @@
  	return endpoint;
  }
  
-@@ -574,12 +578,6 @@
- 			timeout: dns_evaluate_timeout
+@@ -563,25 +573,21 @@
+ 			...parse_dnsserver(china_dns_server)
+ 		});
+ 
++		push(config.dns.servers, {
++			type: 'fakeip',
++			tag: 'fakeip-dns',
++			inet4_range: '198.18.0.0/15',
++			inet6_range: 'fc00::/18'
++		});
++
+ 		push(config.dns.rules, {
+ 			rule_set: 'geosite-cn',
+ 			action: 'route',
+ 			server: 'china-dns'
  		});
  		push(config.dns.rules, {
+-			action: 'evaluate',
+-			server: 'main-dns',
+-			timeout: dns_evaluate_timeout
+-		});
+-		push(config.dns.rules, {
 -			rule_set: 'geoip-cn',
 -			match_response: true,
--			action: 'route',
+ 			action: 'route',
 -			server: 'china-dns'
 -		});
 -		push(config.dns.rules, {
- 			match_response: true,
- 			action: 'respond'
+-			match_response: true,
+-			action: 'respond'
++			server: 'fakeip-dns'
  		});
-@@ -606,19 +604,21 @@
+ 	}
+ }
+@@ -606,19 +612,21 @@
  	set_system_proxy: false
  });
  
@@ -193,7 +201,7 @@
  });
  /* Inbound end */
  
-@@ -640,14 +640,17 @@
+@@ -640,14 +648,17 @@
  			tailscale_exit_node_allow_lan_access : null,
  		advertise_routes: tailscale_advertise_routes,
  		advertise_exit_node: tailscale_advertise_exit_node,
@@ -213,7 +221,7 @@
  	}
  ];
  
-@@ -739,7 +742,7 @@
+@@ -739,7 +750,7 @@
  		strategy: dns_default_strategy
  	};
  
@@ -222,7 +230,7 @@
  	const pre_match_control = add_control_pre_match_policy_rules(config.route.rules, 'main-out');
  
  	for (let group in domain_groups) {
-@@ -749,7 +752,7 @@
+@@ -749,7 +760,7 @@
  			if (!length(domains))
  				continue;
  
@@ -231,7 +239,7 @@
  			if (group.kind === 'direct')
  				push_bypass(config.route.rules, match_rule);
  			else
-@@ -764,8 +767,7 @@
+@@ -764,8 +775,7 @@
  	add_control_pre_match_fallback_rules(config.route.rules, pre_match_control);
  
  	if (routing_mode === 'bypass_mainland_china' && force_proxy_rules) {
@@ -241,7 +249,7 @@
  	}
  
  	push(config.route.rules, { action: 'sniff' });
-@@ -797,11 +799,6 @@
+@@ -797,11 +807,6 @@
  			action: 'route',
  			outbound: 'direct-out'
  		});
