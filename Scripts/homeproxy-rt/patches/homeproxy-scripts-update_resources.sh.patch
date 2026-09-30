@@ -1,5 +1,5 @@
---- a/root/etc/homeproxy/scripts/update_resources.sh
-+++ b/root/etc/homeproxy/scripts/update_resources.sh
+--- base/root/etc/homeproxy/scripts/update_resources.sh	2026-09-30 11:23:18.470498580 +0800
++++ modified/root/etc/homeproxy/scripts/update_resources.sh	2026-09-30 16:29:04.760979555 +0800
 @@ -10,10 +10,12 @@
  RUN_DIR="${RUN_DIR:-/var/run/$NAME}"
  LOG_PATH="$RUN_DIR/$NAME.log"
@@ -17,7 +17,18 @@
  DASHBOARD_SOURCE="${DASHBOARD_SOURCE:-https://codeload.github.com/SagerNet/sing-box-dashboard/zip/refs/heads/gh-pages}"
  DASHBOARD_VERSION_URL="${DASHBOARD_VERSION_URL:-https://github.com/SagerNet/sing-box-dashboard/commits/gh-pages.atom}"
  USER_AGENT="HomeProxy resource updater"
-@@ -71,16 +73,19 @@
+@@ -62,7 +64,9 @@
+ }
+ 
+ download() {
+-	run_curl -fsSL --compressed --retry 3 --retry-all-errors --retry-delay 1 \
++	# NOTE: --compressed omitted: Kwrt ships curl without zlib;
++	# the unknown option aborts every download (exit 2).
++	run_curl -fsSL --retry 3 --retry-all-errors --retry-delay 1 \
+ 		--connect-timeout 10 --max-time 60 -A "$USER_AGENT" -o "$2" "$1" &&
+ 		test -s "$2"
+ }
+@@ -71,22 +75,25 @@
  	"$SING_BOX" rule-set match -f binary "$1" 192.0.2.1 >/dev/null 2>&1
  }
  
@@ -47,7 +58,14 @@
  }
  
  fetch_dashboard_version() {
-@@ -104,55 +109,57 @@
+ 	local feed version
+ 
+-	feed="$(run_curl -fsSL --compressed --retry 3 --retry-all-errors \
++	feed="$(run_curl -fsSL --retry 3 --retry-all-errors \
+ 		--retry-delay 1 --connect-timeout 10 --max-time 30 \
+ 		-A "$USER_AGENT" "$DASHBOARD_VERSION_URL")" || return 1
+ 	version="$(printf '%s\n' "$feed" | awk -F '[<>]' '
+@@ -104,55 +111,57 @@
  	printf '%s\n' "$version"
  }
  
@@ -134,7 +152,7 @@
  update_dashboard() {
  	local version old_version index source_dir=""
  	local backup_dir="${DASHBOARD_DIR}.old.$$"
-@@ -223,8 +230,8 @@
+@@ -223,8 +232,8 @@
  trap 'exit 130' INT
  trap 'exit 143' TERM
  
