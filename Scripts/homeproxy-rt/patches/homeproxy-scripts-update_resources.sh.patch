@@ -1,5 +1,5 @@
---- a/etc/homeproxy/scripts/update_resources.sh
-+++ b/etc/homeproxy/scripts/update_resources.sh
+--- a/root/etc/homeproxy/scripts/update_resources.sh
++++ b/root/etc/homeproxy/scripts/update_resources.sh
 @@ -10,10 +10,12 @@
  RUN_DIR="${RUN_DIR:-/var/run/$NAME}"
  LOG_PATH="$RUN_DIR/$NAME.log"
