@@ -1,6 +1,6 @@
 --- a/root/etc/homeproxy/scripts/generate_client.uc
 +++ b/root/etc/homeproxy/scripts/generate_client.uc
-@@ -177,19 +177,19 @@
+@@ -180,21 +180,21 @@
  	return get_node_outbound_tag(group.node);
  }
  
@@ -16,7 +16,9 @@
 -const tun_addr6 = uci.get(uciconfig, uciinfra, 'tun_addr6') || 'fdfe:dcba:9876::1/126';
 -const tun_mtu = uci.get(uciconfig, uciinfra, 'tun_mtu') || '9000';
 -const multi_queue = uci.get(uciconfig, ucimain, 'multi_queue') === '1';
- const udp_timeout = uci.get(uciconfig, 'infra', 'udp_timeout');
+ const udp_timeout_option = uci.get(uciconfig, uciinfra, 'udp_timeout');
+ /* 5m is sing-box's default, so only pass through an explicit override. */
+ const udp_timeout = (udp_timeout_option !== '300') ? strToTime(udp_timeout_option) : null;
  
 +/* Transparent proxy (redirect + tproxy) settings. */
 +const redirect_port = uci.get(uciconfig, uciinfra, 'redirect_port') || '5331';
@@ -27,7 +29,7 @@
  const log_level = uci.get(uciconfig, ucimain, 'log_level') || 'warn';
  const dashboard_path = HP_DIR + '/dashboard';
  const dashboard_enabled = uci.get(uciconfig, ucimain, 'dashboard_enabled') === '1' &&
-@@ -197,7 +197,6 @@
+@@ -202,7 +202,6 @@
        dashboard_port = strToInt(uci.get(uciconfig, ucimain, 'dashboard_port')),
        dashboard_secret = uci.get(uciconfig, ucimain, 'dashboard_secret');
  const force_proxy_rules = hasForceProxyRules(uci, uciconfig, has_domain_proxy_rules);
@@ -35,7 +37,7 @@
  /* UCI config end */
  
  /* Config helper start */
-@@ -284,24 +283,27 @@
+@@ -289,24 +288,27 @@
  	});
  }
  
@@ -68,7 +70,7 @@
  }
  
  function merge_matches(matches) {
-@@ -337,21 +339,21 @@
+@@ -342,21 +344,21 @@
  	const control = get_control_matches();
  
  	if (control.restrict_to_list)
@@ -97,7 +99,16 @@
  }
  
  function add_control_policy_rules(rules, proxy_outbound) {
-@@ -383,12 +385,6 @@
+@@ -367,7 +369,7 @@
+ 	   mode needs a normal-path counterpart: otherwise traffic from devices that
+ 	   are not in either list falls through to the proxied final outbound. */
+ 	if (control.restrict_to_list)
+-		push_route(rules, tun_unlisted_match(control.listed_source), 'direct-out');
++		push_route(rules, proxy_unlisted_match(control.listed_source), 'direct-out');
+ 
+ 	push_route(rules, control.direct_source, 'direct-out');
+ 
+@@ -395,12 +397,6 @@
  function add_mainland_rule_sets(rule_sets) {
  	push(rule_sets, {
  		type: 'local',
@@ -110,7 +121,7 @@
  		tag: 'geosite-cn',
  		format: 'binary',
  		path: HP_DIR + '/resources/geosite_cn.srs'
-@@ -413,15 +409,23 @@
+@@ -425,15 +421,23 @@
  
  function generate_outbound(node) {
  	const outbound = renderOutbound(node);
@@ -136,8 +147,8 @@
  	return endpoint;
  }
  
-@@ -567,12 +571,6 @@
- 			server: 'main-dns'
+@@ -574,12 +578,6 @@
+ 			timeout: dns_evaluate_timeout
  		});
  		push(config.dns.rules, {
 -			rule_set: 'geoip-cn',
@@ -149,7 +160,7 @@
  			match_response: true,
  			action: 'respond'
  		});
-@@ -603,20 +601,21 @@
+@@ -606,19 +604,21 @@
  	set_system_proxy: false
  });
  
@@ -169,21 +180,20 @@
 -	mtu: strToInt(tun_mtu),
 -	auto_route: true,
 -	auto_redirect: true,
--	dns_mode: 'hijack',
 -	route_exclude_address_set: fast_bypass_mainland ? ['geoip-cn'] : null,
 -	include_interface: length(listen_interfaces) ? listen_interfaces : null,
--	udp_timeout: strToTime(udp_timeout),
+-	udp_timeout,
 -	multi_queue
 +push(config.inbounds, {
 +	type: 'tproxy',
 +	tag: 'tproxy-in',
 +	listen: '::',
 +	listen_port: int(tproxy_port),
-+	udp_timeout: strToTime(udp_timeout)
++	udp_timeout
  });
  /* Inbound end */
  
-@@ -638,14 +637,17 @@
+@@ -640,14 +640,17 @@
  			tailscale_exit_node_allow_lan_access : null,
  		advertise_routes: tailscale_advertise_routes,
  		advertise_exit_node: tailscale_advertise_exit_node,
@@ -203,7 +213,7 @@
  	}
  ];
  
-@@ -737,7 +739,7 @@
+@@ -739,7 +742,7 @@
  		strategy: dns_default_strategy
  	};
  
@@ -212,7 +222,7 @@
  	const pre_match_control = add_control_pre_match_policy_rules(config.route.rules, 'main-out');
  
  	for (let group in domain_groups) {
-@@ -747,7 +749,7 @@
+@@ -749,7 +752,7 @@
  			if (!length(domains))
  				continue;
  
@@ -221,7 +231,7 @@
  			if (group.kind === 'direct')
  				push_bypass(config.route.rules, match_rule);
  			else
-@@ -762,8 +764,7 @@
+@@ -764,8 +767,7 @@
  	add_control_pre_match_fallback_rules(config.route.rules, pre_match_control);
  
  	if (routing_mode === 'bypass_mainland_china' && force_proxy_rules) {
@@ -231,7 +241,7 @@
  	}
  
  	push(config.route.rules, { action: 'sniff' });
-@@ -795,11 +796,6 @@
+@@ -797,11 +799,6 @@
  			action: 'route',
  			outbound: 'direct-out'
  		});

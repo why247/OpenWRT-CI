@@ -44,8 +44,8 @@
  	if [ -e "$DNSMASQ_DIR/../dnsmasq-homeproxy.conf" ] || [ -d "$DNSMASQ_DIR" ]; then
  		rm -rf "$DNSMASQ_DIR/../dnsmasq-homeproxy.conf" "$DNSMASQ_DIR"
 @@ -275,9 +308,10 @@
- 		;;
- 	esac
+ 		chown -R sing-box:sing-box "$CACHE_DIR"
+ 	fi
  
 -	# Prepare firewall before sing-box inserts native TUN auto-redirect rules.
 +	# Prepare firewall includes (server accept rules + client
@@ -68,7 +68,22 @@
  	if [ "$client_ready" -eq 1 ]; then
  		# DNSMasq rules
  		local dns_port dns_ready=1
-@@ -436,6 +475,7 @@
+@@ -327,10 +366,10 @@
+ 
+ 		# QUIC-GO GSO is broken on kernel 6.6 currently
+ 		uname -r | grep -Eq "^6\.6" && procd_set_param env "QUIC_GO_DISABLE_GSO"="true"
+-		# The client always creates a TUN inbound with auto_route and
+-		# auto_redirect, so it cannot run inside the ujail setup used for the
+-		# server instance below: the jail would need /dev/net/tun plus the
+-		# netlink access sing-box uses to install its nftables redirect rules.
++		# The client uses redirect + TPROXY inbounds and manages its own
++		# nftables rules, so it cannot run inside the ujail setup used for the
++		# server instance below: the jail would block the netlink access
++		# sing-box needs to install them.
+ 		# The client is therefore started outside a jail by design.
+ 
+ 		procd_set_param limits core="unlimited"
+@@ -424,6 +463,7 @@
  	config_load "$CONF"
  	sync_subscription_cron 0 || log "Error: failed to clear the subscription update schedule."
  	clear_firewall
