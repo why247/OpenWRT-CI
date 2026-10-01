@@ -1,0 +1,46 @@
+#设备平台
+CONFIG_TARGET_bcm53xx=y
+CONFIG_TARGET_bcm53xx_generic=y
+#设备列表
+CONFIG_TARGET_DEVICE_bcm53xx_generic_DEVICE_phicomm_k3=y
+
+# WiFi (brcmfmac + asus-dhd24 firmware)
+CONFIG_PACKAGE_kmod-brcmfmac=y
+CONFIG_PACKAGE_brcmfmac-firmware-4366c0-pcie-k3=y
+CONFIG_PACKAGE_wpad-basic-mbedtls=y
+
+# HomeProxy kernel requirements (app installed via IPK after flash)
+CONFIG_PACKAGE_kmod-nft-tproxy=y
+CONFIG_PACKAGE_ip-full=y
+CONFIG_PACKAGE_kmod-nft-socket=y
+
+# Screen driver (yangxu52, via diy.sh)
+CONFIG_PACKAGE_k3screenctrl=y
+CONFIG_PACKAGE_luci-app-k3screenctrl=y
+
+# BBR + fq
+CONFIG_PACKAGE_kmod-tcp-bbr=y
+CONFIG_PACKAGE_kmod-sched=y
+
+# System optimizations
+CONFIG_PACKAGE_zram-swap=y
+
+# LuCI (minimal)
+CONFIG_PACKAGE_luci=y
+CONFIG_PACKAGE_luci-base=y
+CONFIG_PACKAGE_luci-mod-admin-full=y
+CONFIG_PACKAGE_luci-mod-network=y
+CONFIG_PACKAGE_luci-mod-status=y
+CONFIG_PACKAGE_luci-mod-system=y
+CONFIG_PACKAGE_luci-i18n-base-zh-cn=y
+CONFIG_PACKAGE_luci-i18n-firewall-zh-cn=y
+
+# Network
+CONFIG_PACKAGE_dnsmasq-full=y
+CONFIG_PACKAGE_odhcpd-ipv6only=y
+CONFIG_PACKAGE_firewall4=y
+
+# USB
+CONFIG_PACKAGE_kmod-usb-core=y
+CONFIG_PACKAGE_kmod-usb-ohci=y
+CONFIG_PACKAGE_kmod-usb2=y
