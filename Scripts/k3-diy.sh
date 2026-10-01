@@ -34,6 +34,16 @@ fi
 if [ ! -d "package/k3custom/luci-app-k3screenctrl" ]; then
 	git clone --depth 1 https://github.com/yangxu52/luci-app-k3screenctrl.git package/k3custom/luci-app-k3screenctrl
 fi
+# Fix k3screenctrl DEPENDS for new OpenWrt device symbol format
+# Old: TARGET_bcm53xx_generic_DEVICE_phicomm_k3
+# New: TARGET_DEVICE_bcm53xx_generic_DEVICE_phicomm_k3
+K3MK="package/k3custom/k3screenctrl/Makefile"
+if [ -f "$K3MK" ]; then
+	if grep -q "TARGET_bcm53xx_generic_DEVICE_phicomm_k3" "$K3MK" && ! grep -q "TARGET_DEVICE_bcm53xx_generic_DEVICE_phicomm_k3" "$K3MK"; then
+		sed -i 's/TARGET_bcm53xx_generic_DEVICE_phicomm_k3/TARGET_DEVICE_bcm53xx_generic_DEVICE_phicomm_k3/g' "$K3MK"
+		echo "Patched k3screenctrl DEPENDS for new format"
+	fi
+fi
 echo "Screen driver replaced OK"
 
 echo "=== K3 DIY: Done ==="
