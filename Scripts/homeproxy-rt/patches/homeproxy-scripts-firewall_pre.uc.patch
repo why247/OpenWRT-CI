@@ -49,6 +49,7 @@
 +	const content = readfile(path);
 +	if (content == null)
 +		return [];
++	let seen = {};
 +	let result = [];
 +	for (let line in split(content, '\n')) {
 +		line = trim(line);
@@ -58,6 +59,13 @@
 +			warn(`Skipping invalid CIDR entry: ${line}\n`);
 +			continue;
 +		}
++		/* nftables rejects duplicate set elements with EEXIST, which
++		 * aborts the entire fw4 reload and leaves the firewall (and the
++		 * transparent proxy) broken. Upstream lists have shipped
++		 * duplicates before, so dedup here while preserving order. */
++		if (seen[line])
++			continue;
++		seen[line] = 1;
 +		push(result, line);
 +	}
 +	return result;

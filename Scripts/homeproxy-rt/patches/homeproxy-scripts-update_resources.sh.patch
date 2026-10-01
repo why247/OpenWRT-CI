@@ -163,18 +163,38 @@
  update_dashboard || mark_failed "dashboard"
  
  if [ -n "$FAILED_BRANCHES" ]; then
-@@ -241,4 +250,16 @@
+@@ -241,4 +250,36 @@
  	finish 3
  fi
  
-+# Refresh firewall rules if CN IPs were updated (nftables embeds the CIDRs)
++# Refresh firewall rules if CN IPs were updated (nftables embeds the CIDRs).
++# The generated include is validated with nft --check before reloading: a
++# broken include aborts the entire fw4 reload and would leave the firewall
++# (and the transparent proxy) down, as happened with a duplicate-laden
++# upstream list. On any failure the previous working include is restored
++# and reloaded, so a bad data update can never take the network down.
 +case "$UPDATED_BRANCHES" in
 +	*cn_ip*)
 +		log "[RESOURCES] cn_ip updated, refreshing firewall rules."
-+		if ucode "/etc/homeproxy/scripts/firewall_pre.uc" 2>/dev/null; then
-+			fw4 reload >/dev/null 2>&1 && log "[RESOURCES] Firewall reloaded." || log "[RESOURCES] Firewall reload failed."
++		client_nft="$RUN_DIR/fw4_client.nft"
++		client_nft_bak="$RUN_DIR/fw4_client.nft.bak"
++		[ -f "$client_nft" ] && cp -f "$client_nft" "$client_nft_bak"
++		if ucode "/etc/homeproxy/scripts/firewall_pre.uc" 2>/dev/null &&
++		   fw4 print 2>/dev/null | nft --check -f - >/dev/null 2>&1 &&
++		   fw4 reload >/dev/null 2>&1; then
++			log "[RESOURCES] Firewall reloaded."
++			rm -f "$client_nft_bak"
 +		else
-+			log "[RESOURCES] Failed to regenerate firewall rules."
++			log "[RESOURCES] Firewall update failed; restoring previous rules."
++			if [ -f "$client_nft_bak" ]; then
++				cp -f "$client_nft_bak" "$client_nft"
++				if fw4 reload >/dev/null 2>&1; then
++					log "[RESOURCES] Previous firewall rules restored."
++				else
++					log "[RESOURCES] CRITICAL: failed to restore firewall rules."
++				fi
++				rm -f "$client_nft_bak"
++			fi
 +		fi
 +		;;
 +esac
