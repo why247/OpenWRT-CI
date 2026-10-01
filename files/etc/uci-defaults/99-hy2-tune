@@ -8,6 +8,15 @@
 
 MARK="# --- hy2-tune: K3 governor+RPS (99-hy2-tune) ---"
 
+# 确保 /etc/rc.local 存在
+if [ ! -f /etc/rc.local ]; then
+	cat > /etc/rc.local <<'RCEOF'
+#!/bin/sh
+exit 0
+RCEOF
+	chmod +x /etc/rc.local
+fi
+
 if ! grep -q "hy2-tune: K3 governor+RPS" /etc/rc.local 2>/dev/null; then
 	# 去掉 rc.local 末尾的 exit 0，追加后再补回
 	sed -i '/^exit 0$/d' /etc/rc.local
