@@ -1,5 +1,5 @@
---- work/base/root/etc/homeproxy/scripts/homeproxy.uc	2026-09-30 11:23:18.470324509 +0800
-+++ work/modified/root/etc/homeproxy/scripts/homeproxy.uc	2026-10-02 21:29:51.026050190 +0800
+--- a/root/etc/homeproxy/scripts/homeproxy.uc
++++ b/root/etc/homeproxy/scripts/homeproxy.uc
 @@ -498,6 +498,9 @@
  		outbound.stream_receive_window = !isEmpty(node.hysteria_stream_receive_window) ? `${node.hysteria_stream_receive_window} B` : null;
  		outbound.connection_receive_window = !isEmpty(node.hysteria_connection_receive_window) ? `${node.hysteria_connection_receive_window} B` : null;
