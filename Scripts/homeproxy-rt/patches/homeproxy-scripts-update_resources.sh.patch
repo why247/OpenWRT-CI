@@ -163,7 +163,7 @@
  update_dashboard || mark_failed "dashboard"
  
  if [ -n "$FAILED_BRANCHES" ]; then
-@@ -241,4 +250,36 @@
+@@ -241,4 +250,45 @@
  	finish 3
  fi
  
@@ -171,21 +171,30 @@
 +# The generated include is validated with nft --check before reloading: a
 +# broken include aborts the entire fw4 reload and would leave the firewall
 +# (and the transparent proxy) down, as happened with a duplicate-laden
-+# upstream list. On any failure the previous working include is restored
-+# and reloaded, so a bad data update can never take the network down.
++# upstream list. On any failure the previous working include AND the previous
++# data files are restored, so the daemon never sees a half-applied update
++# (new .ver on disk but old firewall) and won't trigger a bad service reload.
 +case "$UPDATED_BRANCHES" in
 +	*cn_ip*)
 +		log "[RESOURCES] cn_ip updated, refreshing firewall rules."
 +		client_nft="$RUN_DIR/fw4_client.nft"
 +		client_nft_bak="$RUN_DIR/fw4_client.nft.bak"
++		cn_list="$RESOURCES_DIR/cn_ip.list"
++		cn_ver="$RESOURCES_DIR/cn_ip.ver"
++		cn_list_bak="$RESOURCES_DIR/cn_ip.list.bak"
++		cn_ver_bak="$RESOURCES_DIR/cn_ip.ver.bak"
 +		[ -f "$client_nft" ] && cp -f "$client_nft" "$client_nft_bak"
-+		if ucode "/etc/homeproxy/scripts/firewall_pre.uc" 2>/dev/null &&
-+		   fw4 print 2>/dev/null | nft --check -f - >/dev/null 2>&1 &&
-+		   fw4 reload >/dev/null 2>&1; then
++		[ -f "$cn_list" ] && cp -f "$cn_list" "$cn_list_bak"
++		[ -f "$cn_ver" ] && cp -f "$cn_ver" "$cn_ver_bak"
++		if ucode "/etc/homeproxy/scripts/firewall_pre.uc" 2>&1 | tee -a "$LOG_FILE" &&
++		   fw4 print 2>&1 | tee -a "$LOG_FILE" | nft --check -f - 2>&1 | tee -a "$LOG_FILE" &&
++		   fw4 reload 2>&1 | tee -a "$LOG_FILE"; then
 +			log "[RESOURCES] Firewall reloaded."
-+			rm -f "$client_nft_bak"
++			rm -f "$client_nft_bak" "$cn_list_bak" "$cn_ver_bak"
 +		else
-+			log "[RESOURCES] Firewall update failed; restoring previous rules."
++			log "[RESOURCES] Firewall update failed; restoring previous rules and data."
++			[ -f "$cn_list_bak" ] && cp -f "$cn_list_bak" "$cn_list"
++			[ -f "$cn_ver_bak" ] && cp -f "$cn_ver_bak" "$cn_ver"
 +			if [ -f "$client_nft_bak" ]; then
 +				cp -f "$client_nft_bak" "$client_nft"
 +				if fw4 reload >/dev/null 2>&1; then
@@ -193,7 +202,7 @@
 +				else
 +					log "[RESOURCES] CRITICAL: failed to restore firewall rules."
 +				fi
-+				rm -f "$client_nft_bak"
++				rm -f "$client_nft_bak" "$cn_list_bak" "$cn_ver_bak"
 +			fi
 +		fi
 +		;;
