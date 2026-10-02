@@ -1,1 +1,12 @@
-LS0tIGEvcm9vdC9ldGMvaG9tZXByb3h5L3NjcmlwdHMvaG9tZXByb3h5LnVjCisrKyBiL3Jvb3QvZXRjL2hvbWVwcm94eS9zY3JpcHRzL2hvbWVwcm94eS51YwpAQCAtNDk4LDYgKzQ5OCw5IEBACiAJCW91dGJvdW5kLnN0cmVhbV9yZWNlaXZlX3dpbmRvdyA9ICFpc0VtcHR5KG5vZGUuaHlzdGVyaWFfc3RyZWFtX3JlY2VpdmVfd2luZG93KSA/IGAke25vZGUuaHlzdGVyaWFfc3RyZWFtX3JlY2VpdmVfd2luZG93fSBCYCA6IG51bGw7CiAJCW91dGJvdW5kLmNvbm5lY3Rpb25fcmVjZWl2ZV93aW5kb3cgPSAhaXNFbXB0eShub2RlLmh5c3RlcmlhX2Nvbm5lY3Rpb25fcmVjZWl2ZV93aW5kb3cpID8gYCR7bm9kZS5oeXN0ZXJpYV9jb25uZWN0aW9uX3JlY2VpdmVfd2luZG93fSBCYCA6IG51bGw7CiAJCW91dGJvdW5kLmRpc2FibGVfcGF0aF9tdHVfZGlzY292ZXJ5ID0gc3RyVG9Cb29sKG5vZGUuaHlzdGVyaWFfZGlzYWJsZV9wYXRoX210dV9kaXNjb3ZlcnkpOworCQkvKiBBUDgyMjAgSFkyIOWNg+WFhuS8mOWMliAoUDEpOiBRVUlDIOS/nea0uyArIOW5tuWPkea1gSAqLworCQlvdXRib3VuZC5rZWVwX2FsaXZlX3BlcmlvZCA9ICcxNXMnOworCQlvdXRib3VuZC5tYXhfY29uY3VycmVudF9zdHJlYW1zID0gMTAwMDsKIAkJb3V0Ym91bmQuZGlzYWJsZV9jaHJvbWVfcGFycm90ID0gKG5vZGUudHlwZSA9PT0gJ2h5c3RlcmlhMicpID8gc3RyVG9Cb29sKG5vZGUuaHlzdGVyaWFfZGlzYWJsZV9jaHJvbWVfcGFycm90KSA6IG51bGw7CiAJCW91dGJvdW5kLm9iZnMgPSAobm9kZS50eXBlID09PSAnaHlzdGVyaWEyJyAmJiBub2RlLmh5c3RlcmlhX29iZnNfdHlwZSkgPyB7CiAJCQl0eXBlOiBub2RlLmh5c3RlcmlhX29iZnNfdHlwZSwK
+--- a/root/etc/homeproxy/scripts/homeproxy.uc
++++ b/root/etc/homeproxy/scripts/homeproxy.uc
+@@ -498,6 +498,9 @@
+ 		outbound.stream_receive_window = !isEmpty(node.hysteria_stream_receive_window) ? `${node.hysteria_stream_receive_window} B` : null;
+ 		outbound.connection_receive_window = !isEmpty(node.hysteria_connection_receive_window) ? `${node.hysteria_connection_receive_window} B` : null;
+ 		outbound.disable_path_mtu_discovery = strToBool(node.hysteria_disable_path_mtu_discovery);
++		/* AP8220 HY2 千兆优化 (P1): QUIC 保活 + 并发流 */
++		outbound.keep_alive_period = '15s';
++		outbound.max_concurrent_streams = 1000;
+ 		outbound.disable_chrome_parrot = (node.type === 'hysteria2') ? strToBool(node.hysteria_disable_chrome_parrot) : null;
+ 		outbound.obfs = (node.type === 'hysteria2' && node.hysteria_obfs_type) ? {
+ 			type: node.hysteria_obfs_type,
