@@ -1,1 +1,12 @@
-LS0tIHdvcmsvYmFzZS9yb290L2V0Yy9ob21lcHJveHkvc2NyaXB0cy9ob21lcHJveHkudWMJMjAyNi0wOS0zMCAxMToyMzoxOC40NzAzMjQ1MDkgKzA4MDAKKysrIHdvcmsvbW9kaWZpZWQvcm9vdC9ldGMvaG9tZXByb3h5L3NjcmlwdHMvaG9tZXByb3h5LnVjCTIwMjYtMTAtMDIgMjE6Mjk6NTEuMDI2MDUwMTkwICswODAwCkBAIC00OTgsNiArNDk4LDkgQEAKIAkJb3V0Ym91bmQuc3RyZWFtX3JlY2VpdmVfd2luZG93ID0gIWlzRW1wdHkobm9kZS5oeXN0ZXJpYV9zdHJlYW1fcmVjZWl2ZV93aW5kb3cpID8gYCR7bm9kZS5oeXN0ZXJpYV9zdHJlYW1fcmVjZWl2ZV93aW5kb3d9IEJgIDogbnVsbDsKIAkJb3V0Ym91bmQuY29ubmVjdGlvbl9yZWNlaXZlX3dpbmRvdyA9ICFpc0VtcHR5KG5vZGUuaHlzdGVyaWFfY29ubmVjdGlvbl9yZWNlaXZlX3dpbmRvdykgPyBgJHtub2RlLmh5c3RlcmlhX2Nvbm5lY3Rpb25fcmVjZWl2ZV93aW5kb3d9IEJgIDogbnVsbDsKIAkJb3V0Ym91bmQuZGlzYWJsZV9wYXRoX210dV9kaXNjb3ZlcnkgPSBzdHJUb0Jvb2wobm9kZS5oeXN0ZXJpYV9kaXNhYmxlX3BhdGhfbXR1X2Rpc2NvdmVyeSk7CisJCS8qIEFQODIyMCBIWTIg5Y2D5YWG5LyY5YyWIChQMSk6IFFVSUMg5L+d5rS7ICsg5bm25Y+R5rWBICovCisJCW91dGJvdW5kLmtlZXBfYWxpdmVfcGVyaW9kID0gJzE1cyc7CisJCW91dGJvdW5kLm1heF9jb25jdXJyZW50X3N0cmVhbXMgPSAxMDAwOwogCQlvdXRib3VuZC5kaXNhYmxlX2Nocm9tZV9wYXJyb3QgPSAobm9kZS50eXBlID09PSAnaHlzdGVyaWEyJykgPyBzdHJUb0Jvb2wobm9kZS5oeXN0ZXJpYV9kaXNhYmxlX2Nocm9tZV9wYXJyb3QpIDogbnVsbDsKIAkJb3V0Ym91bmQub2JmcyA9IChub2RlLnR5cGUgPT09ICdoeXN0ZXJpYTInICYmIG5vZGUuaHlzdGVyaWFfb2Jmc190eXBlKSA/IHsKIAkJCXR5cGU6IG5vZGUuaHlzdGVyaWFfb2Jmc190eXBlLAo=
+--- work/base/root/etc/homeproxy/scripts/homeproxy.uc	2026-09-30 11:23:18.470324509 +0800
++++ work/modified/root/etc/homeproxy/scripts/homeproxy.uc	2026-10-02 21:29:51.026050190 +0800
+@@ -498,6 +498,9 @@
+ 		outbound.stream_receive_window = !isEmpty(node.hysteria_stream_receive_window) ? `${node.hysteria_stream_receive_window} B` : null;
+ 		outbound.connection_receive_window = !isEmpty(node.hysteria_connection_receive_window) ? `${node.hysteria_connection_receive_window} B` : null;
+ 		outbound.disable_path_mtu_discovery = strToBool(node.hysteria_disable_path_mtu_discovery);
++		/* AP8220 HY2 千兆优化 (P1): QUIC 保活 + 并发流 */
++		outbound.keep_alive_period = '15s';
++		outbound.max_concurrent_streams = 1000;
+ 		outbound.disable_chrome_parrot = (node.type === 'hysteria2') ? strToBool(node.hysteria_disable_chrome_parrot) : null;
+ 		outbound.obfs = (node.type === 'hysteria2' && node.hysteria_obfs_type) ? {
+ 			type: node.hysteria_obfs_type,
