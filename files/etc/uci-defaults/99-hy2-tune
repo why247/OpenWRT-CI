@@ -27,10 +27,16 @@ if ! grep -q "hy2-tune: AP8220 governor+RPS" /etc/rc.local 2>/dev/null; then
 for p in /sys/devices/system/cpu/cpufreq/policy*; do
 	[ -w "$p/scaling_governor" ] && echo performance > "$p/scaling_governor" 2>/dev/null
 done
-# RPS: 把各网卡收包软中断分到双核（mask 3 = CPU0+CPU1）
-# IPQ 平台多队列；有几个 rx 队列就分几个，不挑接口
+# RPS: 根据 CPU 数量动态设置 mask（双核=3，四核=f）
+# 有几个 rx 队列就分几个，不挑接口
+CPUS=$(nproc 2>/dev/null || echo 2)
+if [ "$CPUS" -ge 4 ]; then
+	RPS_MASK=f
+else
+	RPS_MASK=3
+fi
 for q in /sys/class/net/*/queues/rx-*/rps_cpus; do
-	echo f > "$q" 2>/dev/null
+	echo $RPS_MASK > "$q" 2>/dev/null
 done
 # --- hy2-tune end ---
 EOF
@@ -41,8 +47,14 @@ fi
 for p in /sys/devices/system/cpu/cpufreq/policy*; do
 	[ -w "$p/scaling_governor" ] && echo performance > "$p/scaling_governor" 2>/dev/null
 done
+CPUS=$(nproc 2>/dev/null || echo 2)
+if [ "$CPUS" -ge 4 ]; then
+	RPS_MASK=f
+else
+	RPS_MASK=3
+fi
 for q in /sys/class/net/*/queues/rx-*/rps_cpus; do
-	echo f > "$q" 2>/dev/null
+	echo $RPS_MASK > "$q" 2>/dev/null
 done
 
 exit 0
