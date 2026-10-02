@@ -1,1 +1,20 @@
-IyDnp4HmnInphY3nva7opobnm5bvvJrnlLEgU2V0dGluZ3Muc2gg6L+95Yqg5YiwIC5jb25maWcg5pyr5bC+44CCCiMga2NvbmZpZyDop6PmnpAgLmNvbmZpZyDml7blkIzlkI0gQ09ORklHIOS7peacgOWQjuS4gOasoei1i+WAvOS4uuWHhuOAggojCiMgMSkgSG9tZVByb3h5IOS4jiBOaWtraSDlhbHlrZgKIyAgICBHRU5FUkFMLnR4dCDph4zlt7LmnIkgbHVjaS1hcHAtaG9tZXByb3h5PXnvvIzov5nph4zkuI3lho3opobnm5bvvJsKIyAgICBob21lcHJveHkg5rqQ56CB5p2l6IeqIFZJS0lOR1lGWS9wYWNrYWdlc++8iFBhY2thZ2VzLnNoIOeahCBVUERBVEVfUEFDS0FHRSAidmlraW5nIiDlhYvpmobvvInvvIwKIyAgICDkvp3otZbnmoQgc2luZy1ib3gg5ZCM5qC35p2l6Ieq6K+l5LuT5bqT77yM54mI5pys6YWN5aWX44CCCiMgICAgbmlra2kg55SoIG1paG9tbyDlhoXmoLjvvIxob21lcHJveHkg55SoIHNpbmctYm94IOWGheaguO+8jOS4pOiAheS6kuS4jeWGsueqgeOAggojCiMgMikgTmlra2nvvIhuaWtraW5pa2tpLW9yZy9PcGVuV3J0LW5pa2tp77yM55SxIFBhY2thZ2VzLnNoIOeahCBVUERBVEVfUEFDS0FHRSDlhYvpmobvvIkKIyAgICBuaWtraSAgICAgICAgICAgICAgICAgIOaguOW/g++8iERFUEVORFMg5bimIGttb2QtdHVuIC8ga21vZC1uZnQtdHByb3h5IC8gaXAtZnVsbCDnrYnvvIkKIyAgICBsdWNpLWFwcC1uaWtraSAgICAgICAgIEx1Q0kg55WM6Z2i77yIREVQRU5EUyArbmlra2nvvIkKIyAgICBsdWNpLWkxOG4tbmlra2ktemgtY24gIOS4reaWh+ivreiogOWMhe+8iOeUsSBsdWNpLm1rIOS7jiBwby96aF9IYW5zIOeUn+aIkO+8iQojCiMgMykgbWlob21vIOWGheaguOS6jOmAieS4gO+8mm1paG9tby1tZXRh77yI56iz5a6a54mI77yJLyBtaWhvbW8tYWxwaGHvvIjmtYvor5XniYjvvInvvIwKIyAgICDkuKTogIXpg70gUFJPVklERVM6PW1paG9tb++8jG5pa2tpIOS+nei1lueahOWwseaYr+i/meS4quiZmuaLn+WQjSBtaWhvbW/jgIIKIyAgICBtaWhvbW8tbWV0YSDoh6rluKYgREVGQVVMVF9WQVJJQU5UOj0x77yM6L+Z6YeM5YaN5pi+5byP6ZKJ5L2P77yM6YG/5YWN5Y+Y5L2T6buY6K6k5YC85Lul5ZCO5Y+Y5YyW44CCCkNPTkZJR19QQUNLQUdFX2ttb2QtdGNwLWJicj15CkNPTkZJR19QQUNLQUdFX2ttb2Qtc2NoZWQ9eQpDT05GSUdfUEFDS0FHRV9sdWNpLWFwcC1maWxlbWFuYWdlcj15Cg==
+# 私有配置覆盖：由 Settings.sh 追加到 .config 末尾。
+# kconfig 解析 .config 时同名 CONFIG 以最后一次赋值为准。
+#
+# 1) HomeProxy 与 Nikki 共存
+#    GENERAL.txt 里已有 luci-app-homeproxy=y，这里不再覆盖；
+#    homeproxy 源码来自 VIKINGYFY/packages（Packages.sh 的 UPDATE_PACKAGE "viking" 克隆），
+#    依赖的 sing-box 同样来自该仓库，版本配套。
+#    nikki 用 mihomo 内核，homeproxy 用 sing-box 内核，两者互不冲突。
+#
+# 2) Nikki（nikkinikki-org/OpenWrt-nikki，由 Packages.sh 的 UPDATE_PACKAGE 克隆）
+#    nikki                  核心（DEPENDS 带 kmod-tun / kmod-nft-tproxy / ip-full 等）
+#    luci-app-nikki         LuCI 界面（DEPENDS +nikki）
+#    luci-i18n-nikki-zh-cn  中文语言包（由 luci.mk 从 po/zh_Hans 生成）
+#
+# 3) mihomo 内核二选一：mihomo-meta（稳定版）/ mihomo-alpha（测试版），
+#    两者都 PROVIDES:=mihomo，nikki 依赖的就是这个虚拟名 mihomo。
+#    mihomo-meta 自带 DEFAULT_VARIANT:=1，这里再显式钉住，避免变体默认值以后变化。
+CONFIG_PACKAGE_kmod-tcp-bbr=y
+CONFIG_PACKAGE_kmod-sched=y
+CONFIG_PACKAGE_luci-app-filemanager=y
