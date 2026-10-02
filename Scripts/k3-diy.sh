@@ -1,1 +1,203 @@
-IyEvYmluL2Jhc2gKIyBLMyBESVkgc2NyaXB0IGZvciBPcGVuV1JULUNJCiMg55SxIFBSSVZBVEUuc2gg5pyr5bC+6LCD55So77yM5oiW5ZyoIEszLUFMTC55bWwg5bel5L2c5rWB5Lit5Y2V54us6LCD55SoCiMg55So5rOVOiBiYXNoICRHSVRIVUJfV09SS1NQQUNFL1NjcmlwdHMvazMtZGl5LnNoCiMg5rOo5oSPOiDlv4XpobvlnKggZmVlZHMgdXBkYXRlL2luc3RhbGwg5LmL5ZCO44CBbWFrZSBkZWZjb25maWcg5LmL5YmN6LCD55SoCgpzZXQgLWUKCmVjaG8gIiAiCmVjaG8gIj09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0iCmVjaG8gIkFwcGx5aW5nIEszIGN1c3RvbWl6YXRpb25zLi4uIgplY2hvICI9PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09IgoKIy0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQojIOWumuS9jSB3cnQg5rqQ56CB5qCRICjnhafmioQgUFJJVkFURS5zaCDnmoTmjqLmtYvpgLvovpEpCiMtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0KaWYgWyAtZCAiLi9wYWNrYWdlL2Jhc2UtZmlsZXMiIF07IHRoZW4KCVdSVF9ESVI9IiQocHdkKSIKZWxpZiBbIC1kICIuL2Jhc2UtZmlsZXMiIF07IHRoZW4KCVdSVF9ESVI9IiQoY2QgLi4gJiYgcHdkKSIKZWxzZQoJZWNobyAiW0VSUk9SXSBXUlQgc291cmNlIHRyZWUgbm90IGZvdW5kLCBLMyBjdXN0b21pemF0aW9ucyBza2lwcGVkISIKCWV4aXQgMApmaQoKUEtHX0RJUj0iJFdSVF9ESVIvcGFja2FnZSIKZWNobyAiV1JUIHNvdXJjZSB0cmVlOiAkV1JUX0RJUiIKCiMg5Y+q5ZyoIGJjbTUzeHgvSzMg5p6E5bu65pe25omn6KGMCmlmIFsgLW4gIiRXUlRfVEFSR0VUIiBdICYmIFtbICIke1dSVF9UQVJHRVQsLH0iICE9ICoiYmNtNTN4eCIqIF1dOyB0aGVuCgllY2hvICJOb3QgYmNtNTN4eCB0YXJnZXQgKFdSVF9UQVJHRVQ9JFdSVF9UQVJHRVQpLCBza2lwcGluZyBLMyBjdXN0b21pemF0aW9ucy4iCglleGl0IDAKZmkKCiMtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0KIyBbMS82XSBXaUZpIOWbuuS7tjogYXN1cy1kaGQyNCAoOTUxMDMxIOWtl+iKguagoemqjCkKIy0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQplY2hvICI9PT0gSzMgWzEvNl06IFdpRmkgZmlybXdhcmUgKGFzdXMtZGhkMjQpID09PSIKRldfRElSPSIkV1JUX0RJUi9wYWNrYWdlL2Zpcm13YXJlL2JyY21mbWFjNDM2NmMwLWZpcm13YXJlLWszL2ZpbGVzIgppZiBbICEgLWQgIiRGV19ESVIiIF07IHRoZW4KCWVjaG8gIltXQVJOXSAkRldfRElSIG5vdCBmb3VuZCwgc2tpcHBpbmcgV2lGaSBmaXJtd2FyZSByZXBsYWNlbWVudCIKZWxzZQoJd2dldCAtbnYgaHR0cHM6Ly9naXRodWIuY29tL0hpbGwtOTgvcGhpY29tbWszLWZpcm13YXJlL3Jhdy9tYXN0ZXIvYnJjbWZtYWM0MzY2Yy1wY2llLmJpbi5hc3VzLWRoZDI0IC1PIC90bXAvYnJjbWZtYWM0MzY2Yy1wY2llLmJpbgoJU0laRT0kKHN0YXQgLWMlcyAvdG1wL2JyY21mbWFjNDM2NmMtcGNpZS5iaW4pCglpZiBbICIkU0laRSIgIT0gIjk1MTAzMSIgXTsgdGhlbgoJCWVjaG8gIltFUlJPUl0gV2lGaSBmaXJtd2FyZSBzaXplIG1pc21hdGNoICgkU0laRSAhPSA5NTEwMzEpLCBhYm9ydGluZyEiCgkJZXhpdCAxCglmaQoJU0hBPSQoc2hhMjU2c3VtIC90bXAvYnJjbWZtYWM0MzY2Yy1wY2llLmJpbiB8IGN1dCAtZCcgJyAtZjEpCglpZiBbICIkU0hBIiAhPSAiM2RhMjk2NGJmMzNiMjJkNDQzMDk3ZWY2NDJkZjYxNTI0NmFkYjUwNzI2YjBkMDMwZWI5OTkwYTZlNDY3YzhjYiIgXTsgdGhlbgoJCWVjaG8gIltFUlJPUl0gV2lGaSBmaXJtd2FyZSBTSEEyNTYgbWlzbWF0Y2ggKCRTSEEpLCBhYm9ydGluZyEiCgkJZXhpdCAxCglmaQoJY3AgL3RtcC9icmNtZm1hYzQzNjZjLXBjaWUuYmluICIkRldfRElSL2JyY21mbWFjNDM2NmMtcGNpZS5iaW4iCgllY2hvICJXaUZpIGZpcm13YXJlIHJlcGxhY2VkIE9LIChzaXplK3NoYTI1NiB2ZXJpZmllZCkiCmZpCgojLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tCiMgWzIvNl0g5bGP5bmV6amx5YqoOiB5YW5neHU1MiAo5pu/5o2i5a6Y5pa554mIICsg5L+uIERFUEVORFMg5paw5qC85byPKQojLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tCmVjaG8gIj09PSBLMyBbMi82XTogU2NyZWVuIGRyaXZlciAoeWFuZ3h1NTIpID09PSIKcm0gLXJmICIkV1JUX0RJUi9mZWVkcy9wYWNrYWdlcy91dGlscy9waGljb21tLWszc2NyZWVuY3RybCIgIiRXUlRfRElSL3BhY2thZ2UvZmVlZHMvcGFja2FnZXMvcGhpY29tbS1rM3NjcmVlbmN0cmwiIDI+L2Rldi9udWxsIHx8IHRydWUKcm0gLXJmICIkV1JUX0RJUi9mZWVkcy9sdWNpL2FwcGxpY2F0aW9ucy9sdWNpLWFwcC1rM3NjcmVlbmN0cmwiIDI+L2Rldi9udWxsIHx8IHRydWUKbWtkaXIgLXAgIiRQS0dfRElSL2szY3VzdG9tIgppZiBbICEgLWQgIiRQS0dfRElSL2szY3VzdG9tL2szc2NyZWVuY3RybCIgXTsgdGhlbgoJZ2l0IGNsb25lIC0tZGVwdGggMSBodHRwczovL2dpdGh1Yi5jb20veWFuZ3h1NTIvazNzY3JlZW5jdHJsX2J1aWxkLmdpdCAiJFBLR19ESVIvazNjdXN0b20vazNzY3JlZW5jdHJsIgpmaQppZiBbICEgLWQgIiRQS0dfRElSL2szY3VzdG9tL2x1Y2ktYXBwLWszc2NyZWVuY3RybCIgXTsgdGhlbgoJZ2l0IGNsb25lIC0tZGVwdGggMSBodHRwczovL2dpdGh1Yi5jb20veWFuZ3h1NTIvbHVjaS1hcHAtazNzY3JlZW5jdHJsLmdpdCAiJFBLR19ESVIvazNjdXN0b20vbHVjaS1hcHAtazNzY3JlZW5jdHJsIgpmaQojIOazqOaEjzogeWFuZ3h1NTIg55qEIERFUEVORFMg55So55qE5pivIEAoVEFSR0VUX2JjbTUzeHhfZ2VuZXJpY19ERVZJQ0VfcGhpY29tbV9rM3x8Li4uKQojIOi/meaYr+W9k+WJjSBPcGVuV3J0IOato+ehrueahOiuvuWkh+e6p+S+nei1luagvOW8j++8jOaXoOmcgOS/ruaUuQplY2hvICJTY3JlZW4gZHJpdmVyIHJlcGxhY2VkIE9LIgoKIy0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQojIFszLzZdIGh5Mi9zeXNjdGw6IOWGmeWFpSBwYWNrYWdlL2Jhc2UtZmlsZXMvZmlsZXMgKENJIOato+ehruacuuWItikKIyDms6jmhI86IOS7k+W6k+agueeahCBmaWxlcy8g5LiN5Lya6KKrIFdSVC1DT1JFIOWkjeWItu+8jOW/hemhu+i1sOi/memHjAojLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tCmVjaG8gIj09PSBLMyBbMy82XTogaHkyIHN5c2N0bCA9PT0iClNZU0NUTF9ESVI9IiRQS0dfRElSL2Jhc2UtZmlsZXMvZmlsZXMvZXRjL3N5c2N0bC5kIgpta2RpciAtcCAiJFNZU0NUTF9ESVIiCmNhdCA+ICIkU1lTQ1RMX0RJUi85OS1oeTIuY29uZiIgPDwgJ0VPRicKIyBLMyAoQkNNNDcwOSkgSHlzdGVyaWEyL1FVSUMg57O757uf6LCD5LyYCiMgVURQIOe8k+WGsjogUVVJQy9oeTIg5b+F5aSH77yM5YaF5qC46buY6K6kIDIxMjk5MiDlpKrlsI/kvJrkuKLljIUKbmV0LmNvcmUucm1lbV9tYXggPSA4Mzg4NjA4Cm5ldC5jb3JlLndtZW1fbWF4ID0gODM4ODYwOAojIOe9keWNoeaUtuWMhemYn+WIlwpuZXQuY29yZS5uZXRkZXZfbWF4X2JhY2tsb2cgPSA1MDAwCiMgQkJSICsgZnEgKFRDUCDlh7rnq5nliqDpgJ/vvIxmcSBwYWNpbmcg5bmz5ruRIGh5MiBVRFAg56qB5Y+RKQpuZXQuaXB2NC50Y3BfY29uZ2VzdGlvbl9jb250cm9sID0gYmJyCm5ldC5jb3JlLmRlZmF1bHRfcWRpc2MgPSBmcQojIFRDUCBGYXN0IE9wZW4KbmV0LmlwdjQudGNwX2Zhc3RvcGVuID0gMwpFT0YKZWNobyAic3lzY3RsIHdyaXR0ZW4hIgoKIy0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQojIFs0LzZdIGh5Mi9SUFM6IHVjaS1kZWZhdWx0cyDlhpnlhaUgcmMubG9jYWwgKOW5guetiSkKIy0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQplY2hvICI9PT0gSzMgWzQvNl06IGh5MiBSUFMgdHVuZSA9PT0iClVDSURfRElSPSIkUEtHX0RJUi9iYXNlLWZpbGVzL2ZpbGVzL2V0Yy91Y2ktZGVmYXVsdHMiCm1rZGlyIC1wICIkVUNJRF9ESVIiCmNhdCA+ICIkVUNJRF9ESVIvOTktaHkyLXR1bmUiIDw8ICdFT0YnCiMhL2Jpbi9zaAojIEszIGh5MiDosIPkvJg6IGdvdmVybm9yICsgUlBT77yM6aaW5qyh5byA5py65omn6KGM5ZCO6Ieq5Yig6ZmkClsgLWYgL2V0Yy9yYy5sb2NhbCBdIHx8IHsgZWNobyAtZSAiIyEvYmluL3NoXG5leGl0IDAiID4gL2V0Yy9yYy5sb2NhbDsgfQppZiAhIGdyZXAgLXEgImh5Mi10dW5lOiBLMyBnb3Zlcm5vcitSUFMiIC9ldGMvcmMubG9jYWwgMj4vZGV2L251bGw7IHRoZW4KCXNlZCAtaSAnL15leGl0IDAkL2QnIC9ldGMvcmMubG9jYWwKCWNhdCA+PiAvZXRjL3JjLmxvY2FsIDw8J1JDRU9GJwojIC0tLSBoeTItdHVuZTogSzMgZ292ZXJub3IrUlBTIC0tLQpmb3IgcCBpbiAvc3lzL2RldmljZXMvc3lzdGVtL2NwdS9jcHVmcmVxL3BvbGljeSo7IGRvCglbIC13ICIkcC9zY2FsaW5nX2dvdmVybm9yIiBdICYmIGVjaG8gcGVyZm9ybWFuY2UgPiAiJHAvc2NhbGluZ19nb3Zlcm5vciIgMj4vZGV2L251bGwKZG9uZQpmb3IgcSBpbiAvc3lzL2NsYXNzL25ldC8qL3F1ZXVlcy9yeC0qL3Jwc19jcHVzOyBkbwoJZWNobyAzID4gIiRxIiAyPi9kZXYvbnVsbApkb25lCiMgLS0tIGh5Mi10dW5lIGVuZCAtLS0KUkNFT0YKCWVjaG8gImV4aXQgMCIgPj4gL2V0Yy9yYy5sb2NhbApmaQpmb3IgcCBpbiAvc3lzL2RldmljZXMvc3lzdGVtL2NwdS9jcHVmcmVxL3BvbGljeSo7IGRvCglbIC13ICIkcC9zY2FsaW5nX2dvdmVybm9yIiBdICYmIGVjaG8gcGVyZm9ybWFuY2UgPiAiJHAvc2NhbGluZ19nb3Zlcm5vciIgMj4vZGV2L251bGwKZG9uZQpmb3IgcSBpbiAvc3lzL2NsYXNzL25ldC8qL3F1ZXVlcy9yeC0qL3Jwc19jcHVzOyBkbwoJZWNobyAzID4gIiRxIiAyPi9kZXYvbnVsbApkb25lCmV4aXQgMApFT0YKY2htb2QgK3ggIiRVQ0lEX0RJUi85OS1oeTItdHVuZSIKZWNobyAidWNpLWRlZmF1bHRzIHdyaXR0ZW4hIgoKIy0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQojIFs1LzZdIEszIOaXoOe6v+imhuebljogY2gxNDkgVkhUODAgLyBjaDYgSFQyMCAvIENOCiMgUFJJVkFURS5zaCDnmoQgWzUvNl0g6K6+55qE5pivIGNoNDQvY2g5ICsgVVPvvIxLMyDpnIDopoHopobnm5YKIyDmlofku7blkI0gOTl6LWN1c3RvbS13aXJlbGVzcy1rMyDnoa7kv53lnKggOTl6LWN1c3RvbS13aXJlbGVzcyDkuYvlkI7miafooYwKIy0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQplY2hvICI9PT0gSzMgWzUvNl06IEszIHdpcmVsZXNzIG92ZXJyaWRlID09PSIKY2F0ID4gIiRVQ0lEX0RJUi85OXotY3VzdG9tLXdpcmVsZXNzLWszIiA8PCAnV0VPRicKIyEvYmluL3NoCiMgSzMg5peg57q/6KaG55uWOiA1RyBjaDE0OSBWSFQ4MCAvIDIuNEcgY2g2IEhUMjAgLyDlm73lrrYgQ04KIyDlnKggUFJJVkFURS5zaCDnmoQgOTl6LWN1c3RvbS13aXJlbGVzcyDkuYvlkI7miafooYzvvIzmjIkgYmFuZCDopobnm5YKLiAvbGliL2Z1bmN0aW9ucy5zaApbIC1mIC9ldGMvY29uZmlnL3dpcmVsZXNzIF0gfHwgZXhpdCAwCmszX3dpZmkoKSB7Cglsb2NhbCBkZXZpY2U9IiQxIgoJbG9jYWwgYmFuZAoJY29uZmlnX2dldCBiYW5kICIkZGV2aWNlIiBiYW5kCgljYXNlICIkYmFuZCIgaW4KCQkyZykKCQkJdWNpIHNldCB3aXJlbGVzcy4kZGV2aWNlLmNvdW50cnk9J0NOJwoJCQl1Y2kgc2V0IHdpcmVsZXNzLiRkZXZpY2UuY2hhbm5lbD0nNicKCQkJdWNpIHNldCB3aXJlbGVzcy4kZGV2aWNlLmh0bW9kZT0nSFQyMCcKCQkJdWNpIHNldCB3aXJlbGVzcy4kZGV2aWNlLnR4cG93ZXI9JzIwJwoJCQk7OwoJCTVnKQoJCQl1Y2kgc2V0IHdpcmVsZXNzLiRkZXZpY2UuY291bnRyeT0nQ04nCgkJCXVjaSBzZXQgd2lyZWxlc3MuJGRldmljZS5jaGFubmVsPScxNDknCgkJCXVjaSBzZXQgd2lyZWxlc3MuJGRldmljZS5odG1vZGU9J1ZIVDgwJwoJCQl1Y2kgc2V0IHdpcmVsZXNzLiRkZXZpY2UudHhwb3dlcj0nMjMnCgkJCTs7Cgllc2FjCn0KY29uZmlnX2xvYWQgd2lyZWxlc3MKY29uZmlnX2ZvcmVhY2ggazNfd2lmaSB3aWZpLWRldmljZQp1Y2kgY29tbWl0IHdpcmVsZXNzCmV4aXQgMApXRU9GCmNobW9kICt4ICIkVUNJRF9ESVIvOTl6LWN1c3RvbS13aXJlbGVzcy1rMyIKZWNobyAiSzMgd2lyZWxlc3Mgb3ZlcnJpZGUgd3JpdHRlbiEiCgojLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tCiMgWzYvNl0gc2luZy1ib3g6IDEuMTQuMiArIEdPQVJNPTUgKEJDTTQ3MDkg5pegIFZGUC9ORU9O77yM6buY6K6k56Gs5rWu54K55LyaIGlsbGVnYWwgaW5zdHJ1Y3Rpb24pCiMtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0KZWNobyAiPT09IEszIFs2LzZdOiBzaW5nLWJveCAxLjE0LjIgR09BUk09NSA9PT0iClNCX01LPSIkUEtHX0RJUi9wYWNrYWdlcy9zaW5nLWJveC9NYWtlZmlsZSIKaWYgWyAtZiAiJFNCX01LIiBdOyB0aGVuCgkjIDEuMTQuMgoJc2VkIC1pICdzL1BLR19VUFNUUkVBTV9WRVJTSU9OOj0xLjE1LjAtYWxwaGEuOS9QS0dfVVBTVFJFQU1fVkVSU0lPTjo9MS4xNC4yLycgIiRTQl9NSyIKCXNlZCAtaSAncy9QS0dfVkVSU0lPTjo9MS4xNS4wX2FscGhhOS9QS0dfVkVSU0lPTjo9MS4xNC4yLycgIiRTQl9NSyIKCXNlZCAtaSAncy9QS0dfSEFTSDo9ZjhjMjYxYTU2ZTgyYWRlMDE0OWQ3MzYyOWY2N2NhMGIzOGVkODM4NmU2ZmFkZmQzZjNiZmY1ZWY4ZjliY2Q4OC9QS0dfSEFTSDo9NjdkZDhmOGMzN2VjYWFhZGNmY2FmYWQxZjA4MjdlZWQ0YjAzNGM5NjNiODZmZDNhYTVjMGQ3YTM2ODc2ODQ1ZC8nICIkU0JfTUsiCgkjIEdPX0FSTT01IChzb2Z0IGZsb2F0LCDkuI3mmK8gR09BUk0hKQoJIyBnb2xhbmctdmFsdWVzLm1rIOmHjDogR09BUk09IiQoR09fQVJNKSLvvIzkuJQgR09fQVJNIOeUsSBDT05GSUdfQ1BVX1RZUEUg55qEIEZQVSDlhrPlrpoKCSMgYmNtNTN4eCDnmoQgQ29ydGV4LUE5IOm7mOiupOS8muW+lyBHT19BUk09NyAoaGFyZCBmbG9hdCnvvIzlnKggSzMg5LiKIGlsbGVnYWwgaW5zdHJ1Y3Rpb24KCSMg6L+95Yqg5Yiw5paH5Lu25pyr5bC+77yM6KaG55uWIGdvbGFuZy12YWx1ZXMubWsg6YeM566X5Ye65p2l55qE5YC8CglpZiAhIGdyZXAgLXEgIl5HT19BUk06PTUiICIkU0JfTUsiOyB0aGVuCgkJZWNobyAiIiA+PiAiJFNCX01LIgoJCWVjaG8gIiMgSzM6IGZvcmNlIHNvZnQgZmxvYXQgKEJDTTQ3MDkgaGFzIG5vIFZGUC9ORU9OKSIgPj4gIiRTQl9NSyIKCQllY2hvICJHT19BUk06PTUiID4+ICIkU0JfTUsiCgkJZWNobyAic2luZy1ib3ggcGF0Y2hlZDogMS4xNC4yICsgR09fQVJNPTUiCgllbHNlCgkJZWNobyAic2luZy1ib3ggR09fQVJNIGFscmVhZHkgc2V0IgoJZmkKCSMg6aqM6K+BCglncmVwIC1xICJQS0dfVVBTVFJFQU1fVkVSU0lPTjo9MS4xNC4yIiAiJFNCX01LIiAmJiBncmVwIC1xICJeR09fQVJNOj01IiAiJFNCX01LIiBcCgkJJiYgZWNobyAic2luZy1ib3ggcGF0Y2ggdmVyaWZpZWQgT0siIFwKCQl8fCB7IGVjaG8gIltFUlJPUl0gc2luZy1ib3ggcGF0Y2ggZmFpbGVkISI7IGV4aXQgMTsgfQplbHNlCgllY2hvICJbV0FSTl0gJFNCX01LIG5vdCBmb3VuZCwgc2tpcHBpbmcgc2luZy1ib3ggcGF0Y2giCmZpCgplY2hvICI9PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09IgplY2hvICJLMyBjdXN0b21pemF0aW9ucyBhcHBsaWVkISIKZWNobyAiPT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PSIK
+#!/bin/bash
+# K3 DIY script for OpenWRT-CI
+# 由 PRIVATE.sh 末尾调用，或在 K3-ALL.yml 工作流中单独调用
+# 用法: bash $GITHUB_WORKSPACE/Scripts/k3-diy.sh
+# 注意: 必须在 feeds update/install 之后、make defconfig 之前调用
+
+set -e
+
+echo " "
+echo "=============================================="
+echo "Applying K3 customizations..."
+echo "=============================================="
+
+#---------------------------------------------------------------
+# 定位 wrt 源码树 (照抄 PRIVATE.sh 的探测逻辑)
+#---------------------------------------------------------------
+if [ -d "./package/base-files" ]; then
+	WRT_DIR="$(pwd)"
+elif [ -d "./base-files" ]; then
+	WRT_DIR="$(cd .. && pwd)"
+else
+	echo "[ERROR] WRT source tree not found, K3 customizations skipped!"
+	exit 0
+fi
+
+PKG_DIR="$WRT_DIR/package"
+echo "WRT source tree: $WRT_DIR"
+
+# 只在 bcm53xx/K3 构建时执行
+if [ -n "$WRT_TARGET" ] && [[ "${WRT_TARGET,,}" != *"bcm53xx"* ]]; then
+	echo "Not bcm53xx target (WRT_TARGET=$WRT_TARGET), skipping K3 customizations."
+	exit 0
+fi
+
+#---------------------------------------------------------------
+# [1/6] WiFi 固件: asus-dhd24 (951031 字节校验)
+#---------------------------------------------------------------
+echo "=== K3 [1/6]: WiFi firmware (asus-dhd24) ==="
+FW_DIR="$WRT_DIR/package/firmware/brcmfmac4366c0-firmware-k3/files"
+if [ ! -d "$FW_DIR" ]; then
+	echo "[WARN] $FW_DIR not found, skipping WiFi firmware replacement"
+else
+	wget -nv https://github.com/Hill-98/phicommk3-firmware/raw/master/brcmfmac4366c-pcie.bin.asus-dhd24 -O /tmp/brcmfmac4366c-pcie.bin
+	SIZE=$(stat -c%s /tmp/brcmfmac4366c-pcie.bin)
+	if [ "$SIZE" != "951031" ]; then
+		echo "[ERROR] WiFi firmware size mismatch ($SIZE != 951031), aborting!"
+		exit 1
+	fi
+	SHA=$(sha256sum /tmp/brcmfmac4366c-pcie.bin | cut -d' ' -f1)
+	if [ "$SHA" != "3da2964bf33b22d443097ef642df615246adb50726b0d030eb9990a6e467c8cb" ]; then
+		echo "[ERROR] WiFi firmware SHA256 mismatch ($SHA), aborting!"
+		exit 1
+	fi
+	cp /tmp/brcmfmac4366c-pcie.bin "$FW_DIR/brcmfmac4366c-pcie.bin"
+	echo "WiFi firmware replaced OK (size+sha256 verified)"
+fi
+
+#---------------------------------------------------------------
+# [2/6] 屏幕驱动: yangxu52 (替换官方版 + 修 DEPENDS 新格式)
+#---------------------------------------------------------------
+echo "=== K3 [2/6]: Screen driver (yangxu52) ==="
+rm -rf "$WRT_DIR/feeds/packages/utils/phicomm-k3screenctrl" "$WRT_DIR/package/feeds/packages/phicomm-k3screenctrl" 2>/dev/null || true
+rm -rf "$WRT_DIR/feeds/luci/applications/luci-app-k3screenctrl" 2>/dev/null || true
+mkdir -p "$PKG_DIR/k3custom"
+if [ ! -d "$PKG_DIR/k3custom/k3screenctrl" ]; then
+	git clone --depth 1 https://github.com/yangxu52/k3screenctrl_build.git "$PKG_DIR/k3custom/k3screenctrl"
+fi
+if [ ! -d "$PKG_DIR/k3custom/luci-app-k3screenctrl" ]; then
+	git clone --depth 1 https://github.com/yangxu52/luci-app-k3screenctrl.git "$PKG_DIR/k3custom/luci-app-k3screenctrl"
+fi
+# 注意: yangxu52 的 DEPENDS 用的是 @(TARGET_bcm53xx_generic_DEVICE_phicomm_k3||...)
+# 这是当前 OpenWrt 正确的设备级依赖格式，无需修改
+echo "Screen driver replaced OK"
+
+#---------------------------------------------------------------
+# [3/6] hy2/sysctl: 写入 package/base-files/files (CI 正确机制)
+# 注意: 仓库根的 files/ 不会被 WRT-CORE 复制，必须走这里
+#---------------------------------------------------------------
+echo "=== K3 [3/6]: hy2 sysctl ==="
+SYSCTL_DIR="$PKG_DIR/base-files/files/etc/sysctl.d"
+mkdir -p "$SYSCTL_DIR"
+cat > "$SYSCTL_DIR/99-hy2.conf" << 'EOF'
+# K3 (BCM4709) Hysteria2/QUIC 系统调优
+# UDP 缓冲: QUIC/hy2 必备，内核默认 212992 太小会丢包
+net.core.rmem_max = 8388608
+net.core.wmem_max = 8388608
+# 网卡收包队列
+net.core.netdev_max_backlog = 5000
+# BBR + fq (TCP 出站加速，fq pacing 平滑 hy2 UDP 突发)
+net.ipv4.tcp_congestion_control = bbr
+net.core.default_qdisc = fq
+# TCP Fast Open
+net.ipv4.tcp_fastopen = 3
+EOF
+echo "sysctl written!"
+
+#---------------------------------------------------------------
+# [4/6] hy2/RPS: uci-defaults 写入 rc.local (幂等)
+#---------------------------------------------------------------
+echo "=== K3 [4/6]: hy2 RPS tune ==="
+UCID_DIR="$PKG_DIR/base-files/files/etc/uci-defaults"
+mkdir -p "$UCID_DIR"
+cat > "$UCID_DIR/99-hy2-tune" << 'EOF'
+#!/bin/sh
+# K3 hy2 调优: governor + RPS，首次开机执行后自删除
+[ -f /etc/rc.local ] || { echo -e "#!/bin/sh\nexit 0" > /etc/rc.local; }
+if ! grep -q "hy2-tune: K3 governor+RPS" /etc/rc.local 2>/dev/null; then
+	sed -i '/^exit 0$/d' /etc/rc.local
+	cat >> /etc/rc.local <<'RCEOF'
+# --- hy2-tune: K3 governor+RPS ---
+for p in /sys/devices/system/cpu/cpufreq/policy*; do
+	[ -w "$p/scaling_governor" ] && echo performance > "$p/scaling_governor" 2>/dev/null
+done
+for q in /sys/class/net/*/queues/rx-*/rps_cpus; do
+	echo 3 > "$q" 2>/dev/null
+done
+# --- hy2-tune end ---
+RCEOF
+	echo "exit 0" >> /etc/rc.local
+fi
+for p in /sys/devices/system/cpu/cpufreq/policy*; do
+	[ -w "$p/scaling_governor" ] && echo performance > "$p/scaling_governor" 2>/dev/null
+done
+for q in /sys/class/net/*/queues/rx-*/rps_cpus; do
+	echo 3 > "$q" 2>/dev/null
+done
+exit 0
+EOF
+chmod +x "$UCID_DIR/99-hy2-tune"
+echo "uci-defaults written!"
+
+#---------------------------------------------------------------
+# [5/6] K3 无线覆盖: ch149 VHT80 / ch6 HT20 / CN
+# PRIVATE.sh 的 [5/6] 设的是 ch44/ch9 + US，K3 需要覆盖
+# 文件名 99z-custom-wireless-k3 确保在 99z-custom-wireless 之后执行
+#---------------------------------------------------------------
+echo "=== K3 [5/6]: K3 wireless override ==="
+cat > "$UCID_DIR/99z-custom-wireless-k3" << 'WEOF'
+#!/bin/sh
+# K3 无线覆盖: 5G ch149 VHT80 / 2.4G ch6 HT20 / 国家 CN
+# 在 PRIVATE.sh 的 99z-custom-wireless 之后执行，按 band 覆盖
+. /lib/functions.sh
+[ -f /etc/config/wireless ] || exit 0
+k3_wifi() {
+	local device="$1"
+	local band
+	config_get band "$device" band
+	case "$band" in
+		2g)
+			uci set wireless.$device.country='CN'
+			uci set wireless.$device.channel='6'
+			uci set wireless.$device.htmode='HT20'
+			uci set wireless.$device.txpower='20'
+			;;
+		5g)
+			uci set wireless.$device.country='CN'
+			uci set wireless.$device.channel='149'
+			uci set wireless.$device.htmode='VHT80'
+			uci set wireless.$device.txpower='23'
+			;;
+	esac
+}
+config_load wireless
+config_foreach k3_wifi wifi-device
+uci commit wireless
+exit 0
+WEOF
+chmod +x "$UCID_DIR/99z-custom-wireless-k3"
+echo "K3 wireless override written!"
+
+#---------------------------------------------------------------
+# [6/6] sing-box: 1.14.2 + GOARM=5 (BCM4709 无 VFP/NEON，默认硬浮点会 illegal instruction)
+#---------------------------------------------------------------
+echo "=== K3 [6/6]: sing-box 1.14.2 GOARM=5 ==="
+SB_MK="$PKG_DIR/packages/sing-box/Makefile"
+if [ -f "$SB_MK" ]; then
+	# 1.14.2
+	sed -i 's/PKG_UPSTREAM_VERSION:=1.15.0-alpha.9/PKG_UPSTREAM_VERSION:=1.14.2/' "$SB_MK"
+	sed -i 's/PKG_VERSION:=1.15.0_alpha9/PKG_VERSION:=1.14.2/' "$SB_MK"
+	sed -i 's/PKG_HASH:=f8c261a56e82ade0149d73629f67ca0b38ed8386e6fadfd3f3bff5ef8f9bcd88/PKG_HASH:=67dd8f8c37ecaaadcfcafad1f0827eed4b034c963b86fd3aa5c0d7a36876845d/' "$SB_MK"
+	# GO_ARM=5 (soft float, 不是 GOARM!)
+	# golang-values.mk 里: GOARM="$(GO_ARM)"，且 GO_ARM 由 CONFIG_CPU_TYPE 的 FPU 决定
+	# bcm53xx 的 Cortex-A9 默认会得 GO_ARM=7 (hard float)，在 K3 上 illegal instruction
+	# 追加到文件末尾，覆盖 golang-values.mk 里算出来的值
+	if ! grep -q "^GO_ARM:=5" "$SB_MK"; then
+		echo "" >> "$SB_MK"
+		echo "# K3: force soft float (BCM4709 has no VFP/NEON)" >> "$SB_MK"
+		echo "GO_ARM:=5" >> "$SB_MK"
+		echo "sing-box patched: 1.14.2 + GO_ARM=5"
+	else
+		echo "sing-box GO_ARM already set"
+	fi
+	# 验证
+	grep -q "PKG_UPSTREAM_VERSION:=1.14.2" "$SB_MK" && grep -q "^GO_ARM:=5" "$SB_MK" \
+		&& echo "sing-box patch verified OK" \
+		|| { echo "[ERROR] sing-box patch failed!"; exit 1; }
+else
+	echo "[WARN] $SB_MK not found, skipping sing-box patch"
+fi
+
+echo "=============================================="
+echo "K3 customizations applied!"
+echo "=============================================="
