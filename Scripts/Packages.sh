@@ -1,1 +1,104 @@
-IyEvYmluL2Jhc2gKIyBTUERYLUxpY2Vuc2UtSWRlbnRpZmllcjogTUlUCiMgQ29weXJpZ2h0IChDKSAyMDI2IFZJS0lOR1lGWQoKI+WuieijheWSjOabtOaWsOi9r+S7tuWMhQpVUERBVEVfUEFDS0FHRSgpIHsKCWxvY2FsIFBLR19OQU1FPSQxCglsb2NhbCBQS0dfUkVQTz0kMgoJbG9jYWwgUEtHX0JSQU5DSD0kMwoJbG9jYWwgUEtHX1NQRUNJQUw9JDQKCWxvY2FsIFBLR19MSVNUPSgiJFBLR19OQU1FIiAkNSkgICMg56ysNeS4quWPguaVsOS4uuiHquWumuS5ieWQjeensOWIl+ihqAoJbG9jYWwgUkVQT19OQU1FPSR7UEtHX1JFUE8jKi99Cglsb2NhbCBSRVBPX1BBVEg9Ii4vcGFja2FnZS8kUkVQT19OQU1FIgoKCWVjaG8gIiAiCgoJIyDliKDpmaTmnKzlnLDlj6/og73lrZjlnKjnmoTkuI3lkIzlkI3np7DnmoTova/ku7bljIUKCWZvciBOQU1FIGluICIke1BLR19MSVNUW0BdfSI7IGRvCgkJIyDmn6Xmib7ljLnphY3nmoTnm67lvZUKCQllY2hvICJTZWFyY2ggZGlyZWN0b3J5OiAkTkFNRSIKCQlsb2NhbCBGT1VORF9ESVJTPSQoZmluZCAuL2ZlZWRzL2x1Y2kvIC4vZmVlZHMvcGFja2FnZXMvIC1tYXhkZXB0aCAzIC10eXBlIGQgLWluYW1lICIqJE5BTUUqIiAyPi9kZXYvbnVsbCkKCgkJIyDliKDpmaTmib7liLDnmoTnm67lvZUKCQlpZiBbIC1uICIkRk9VTkRfRElSUyIgXTsgdGhlbgoJCQl3aGlsZSByZWFkIC1yIERJUjsgZG8KCQkJCXJtIC1yZiAiJERJUiIKCQkJCWVjaG8gIkRlbGV0ZSBkaXJlY3Rvcnk6ICRESVIiCgkJCWRvbmUgPDw8ICIkRk9VTkRfRElSUyIKCQllbHNlCgkJCWVjaG8gIk5vdCBmb251ZCBkaXJlY3Rvcnk6ICROQU1FIgoJCWZpCglkb25lCgoJIyDlhYvpmoYgR2l0SHViIOS7k+W6kwoJZ2l0IGNsb25lIC0tZGVwdGg9MSAtLXNpbmdsZS1icmFuY2ggLS1icmFuY2ggJFBLR19CUkFOQ0ggImh0dHBzOi8vZ2l0aHViLmNvbS8kUEtHX1JFUE8uZ2l0IiAkUkVQT19QQVRICgoJIyDlpITnkIblhYvpmobnmoTku5PlupMKCWlmIFtbICIkUEtHX1NQRUNJQUwiID09ICJwa2ciIF1dOyB0aGVuCgkJZmluZCAkUkVQT19QQVRILyovIC1tYXhkZXB0aCAzIC10eXBlIGQgLWluYW1lICIqJFBLR19OQU1FKiIgLXBydW5lIC1leGVjIGNwIC1yZiB7fSAuL3BhY2thZ2UgXDsKCQlybSAtcmYgJFJFUE9fUEFUSAoJZmkKfQoKIyDosIPnlKjnpLrkvosKIyBVUERBVEVfUEFDS0FHRSAiT3BlbkFwcEZpbHRlciIgImRlc3RhbjE5L09wZW5BcHBGaWx0ZXIiICJtYXN0ZXIiICIiICJjdXN0b21fbmFtZTEgY3VzdG9tX25hbWUyIgojIFVQREFURV9QQUNLQUdFICJvcGVuLWFwcC1maWx0ZXIiICJkZXN0YW4xOS9PcGVuQXBwRmlsdGVyIiAibWFzdGVyIiAiIiAibHVjaS1hcHAtYXBwZmlsdGVyIG9hZiIg6L+Z5qC35Lya5oqK5Y6f5pyJ55qEb3Blbi1hcHAtZmlsdGVy77yMbHVjaS1hcHAtYXBwZmlsdGVy77yMb2Fm55u45YWz57uE5Lu25Yig6Zmk77yM5LiN5Lya5Ye6546wY29yZW1hcmvplJnor6/jgIIKCiMgVVBEQVRFX1BBQ0tBR0UgIuWMheWQjSIgIumhueebruWcsOWdgCIgIumhueebruWIhuaUryIgInBrZ++8jOWPr+mAie+8jOS7juWkp+adgueDqeS4reWNleeLrOaPkOWPluWMheWQjeaPkuS7tiIKCgpVUERBVEVfUEFDS0FHRSAidmlraW5nIiAiVklLSU5HWUZZL3BhY2thZ2VzIiAibWFpbiIgIiIgImF4b25odWIgZ2Vjb29zYWMgc2luZy1ib3ggbHVjaS1hcHAtaG9tZXByb3h5IGx1Y2ktYXBwLXRpbWV3b2wgbHVjaS1hcHAtd29scGx1cyBsdWNpLWFwcC13b2x1bHRyYSIKCgoKCgoj5pu05paw6L2v5Lu25YyF54mI5pysClVQREFURV9WRVJTSU9OKCkgewoJbG9jYWwgUEtHX05BTUU9JDEKCWxvY2FsIFBLR19NQVJLPSR7MjotZmFsc2V9Cglsb2NhbCBQS0dfRklMRVM9JChmaW5kIC4vIC4vZmVlZHMvcGFja2FnZXMvIC1tYXhkZXB0aCAzIC10eXBlIGYgLXdob2xlbmFtZSAiKi8kUEtHX05BTUUvTWFrZWZpbGUiKQoKCWlmIFsgLXogIiRQS0dfRklMRVMiIF07IHRoZW4KCQllY2hvICIkUEtHX05BTUUgbm90IGZvdW5kISIKCQlyZXR1cm4KCWZpCgoJZWNobyAtZSAiXG4kUEtHX05BTUUgdmVyc2lvbiB1cGRhdGUgaGFzIHN0YXJ0ZWQhIgoKCWZvciBQS0dfRklMRSBpbiAkUEtHX0ZJTEVTOyBkbwoJCWxvY2FsIFBLR19SRVBPPSQoZ3JlcCAtUG8gIlBLR19TT1VSQ0VfVVJMOj1odHRwczovLy4qZ2l0aHViLmNvbS9cS1teL10rL1teL10rKD89LiopIiAkUEtHX0ZJTEUpCgkJbG9jYWwgUEtHX1RBRz0kKGN1cmwgLXNMICJodHRwczovL2FwaS5naXRodWIuY29tL3JlcG9zLyRQS0dfUkVQTy9yZWxlYXNlcyIgfCBqcSAtciAibWFwKHNlbGVjdCgucHJlcmVsZWFzZSA9PSAkUEtHX01BUkspKSB8IGZpcnN0IHwgLnRhZ19uYW1lIikKCgkJbG9jYWwgT0xEX1ZFUj0kKGdyZXAgLVBvICJQS0dfVkVSU0lPTjo9XEsuKiIgIiRQS0dfRklMRSIpCgkJbG9jYWwgT0xEX1VSTD0kKGdyZXAgLVBvICJQS0dfU09VUkNFX1VSTDo9XEsuKiIgIiRQS0dfRklMRSIpCgkJbG9jYWwgT0xEX0ZJTEU9JChncmVwIC1QbyAiUEtHX1NPVVJDRTo9XEsuKiIgIiRQS0dfRklMRSIpCgkJbG9jYWwgT0xEX0hBU0g9JChncmVwIC1QbyAiUEtHX0hBU0g6PVxLLioiICIkUEtHX0ZJTEUiKQoKCQlsb2NhbCBQS0dfVVJMPSQoW1sgIiRPTERfVVJMIiA9PSAqInJlbGVhc2VzIiogXV0gJiYgZWNobyAiJHtPTERfVVJMJS99LyRPTERfRklMRSIgfHwgZWNobyAiJHtPTERfVVJMJS99IikKCgkJbG9jYWwgTkVXX1ZFUj0kKGVjaG8gJFBLR19UQUcgfCBzZWQgLUUgJ3MvW14wLTldKy9cLi9nOyBzL15cLnxcLiQvL2cnKQoJCWxvY2FsIE5FV19VUkw9JChlY2hvICRQS0dfVVJMIHwgc2VkICJzL1wkKFBLR19WRVJTSU9OKS8kTkVXX1ZFUi9nOyBzL1wkKFBLR19OQU1FKS8kUEtHX05BTUUvZyIpCgkJbG9jYWwgTkVXX0hBU0g9JChjdXJsIC1zTCAiJE5FV19VUkwiIHwgc2hhMjU2c3VtIHwgY3V0IC1kICcgJyAtZiAxKQoKCQllY2hvICJvbGQgdmVyc2lvbjogJE9MRF9WRVIgJE9MRF9IQVNIIgoJCWVjaG8gIm5ldyB2ZXJzaW9uOiAkTkVXX1ZFUiAkTkVXX0hBU0giCgoJCWlmIFtbICIkTkVXX1ZFUiIgPX4gXlswLTldLiogXV0gJiYgZHBrZyAtLWNvbXBhcmUtdmVyc2lvbnMgIiRPTERfVkVSIiBsdCAiJE5FV19WRVIiOyB0aGVuCgkJCXNlZCAtaSAicy9QS0dfVkVSU0lPTjo9LiovUEtHX1ZFUlNJT046PSRORVdfVkVSL2ciICIkUEtHX0ZJTEUiCgkJCXNlZCAtaSAicy9QS0dfSEFTSDo9LiovUEtHX0hBU0g6PSRORVdfSEFTSC9nIiAiJFBLR19GSUxFIgoJCQllY2hvICIkUEtHX0ZJTEUgdmVyc2lvbiBoYXMgYmVlbiB1cGRhdGVkISIKCQllbHNlCgkJCWVjaG8gIiRQS0dfRklMRSB2ZXJzaW9uIGlzIGFscmVhZHkgdGhlIGxhdGVzdCEiCgkJZmkKCWRvbmUKfQoKI1VQREFURV9WRVJTSU9OICLova/ku7bljIXlkI0iICLmtYvor5XniYjvvIx0cnVl77yM5Y+v6YCJ77yM6buY6K6k5Li65ZCmIgojVVBEQVRFX1ZFUlNJT04gInNpbmctYm94IgoKI+W8leWFpeengeacieaJqeWxleiEmuacrAppZiBbIC1mICIkR0lUSFVCX1dPUktTUEFDRS9TY3JpcHRzL1BSSVZBVEUuc2giIF07IHRoZW4KCXNvdXJjZSAiJEdJVEhVQl9XT1JLU1BBQ0UvU2NyaXB0cy9QUklWQVRFLnNoIgpmaQo=
+#!/bin/bash
+# SPDX-License-Identifier: MIT
+# Copyright (C) 2026 VIKINGYFY
+
+#安装和更新软件包
+UPDATE_PACKAGE() {
+	local PKG_NAME=$1
+	local PKG_REPO=$2
+	local PKG_BRANCH=$3
+	local PKG_SPECIAL=$4
+	local PKG_LIST=("$PKG_NAME" $5)  # 第5个参数为自定义名称列表
+	local REPO_NAME=${PKG_REPO#*/}
+	local REPO_PATH="./package/$REPO_NAME"
+
+	echo " "
+
+	# 删除本地可能存在的不同名称的软件包
+	for NAME in "${PKG_LIST[@]}"; do
+		# 查找匹配的目录
+		echo "Search directory: $NAME"
+		local FOUND_DIRS=$(find ./feeds/luci/ ./feeds/packages/ -maxdepth 3 -type d -iname "*$NAME*" 2>/dev/null)
+
+		# 删除找到的目录
+		if [ -n "$FOUND_DIRS" ]; then
+			while read -r DIR; do
+				rm -rf "$DIR"
+				echo "Delete directory: $DIR"
+			done <<< "$FOUND_DIRS"
+		else
+			echo "Not fonud directory: $NAME"
+		fi
+	done
+
+	# 克隆 GitHub 仓库
+	git clone --depth=1 --single-branch --branch $PKG_BRANCH "https://github.com/$PKG_REPO.git" $REPO_PATH
+
+	# 处理克隆的仓库
+	if [[ "$PKG_SPECIAL" == "pkg" ]]; then
+		find $REPO_PATH/*/ -maxdepth 3 -type d -iname "*$PKG_NAME*" -prune -exec cp -rf {} ./package \;
+		rm -rf $REPO_PATH
+	fi
+}
+
+# 调用示例
+# UPDATE_PACKAGE "OpenAppFilter" "destan19/OpenAppFilter" "master" "" "custom_name1 custom_name2"
+# UPDATE_PACKAGE "open-app-filter" "destan19/OpenAppFilter" "master" "" "luci-app-appfilter oaf" 这样会把原有的open-app-filter，luci-app-appfilter，oaf相关组件删除，不会出现coremark错误。
+
+# UPDATE_PACKAGE "包名" "项目地址" "项目分支" "pkg，可选，从大杂烩中单独提取包名插件"
+
+
+UPDATE_PACKAGE "viking" "VIKINGYFY/packages" "main" "" "axonhub gecoosac sing-box luci-app-homeproxy luci-app-timewol luci-app-wolplus luci-app-wolultra"
+
+
+
+
+
+#更新软件包版本
+UPDATE_VERSION() {
+	local PKG_NAME=$1
+	local PKG_MARK=${2:-false}
+	local PKG_FILES=$(find ./ ./feeds/packages/ -maxdepth 3 -type f -wholename "*/$PKG_NAME/Makefile")
+
+	if [ -z "$PKG_FILES" ]; then
+		echo "$PKG_NAME not found!"
+		return
+	fi
+
+	echo -e "\n$PKG_NAME version update has started!"
+
+	for PKG_FILE in $PKG_FILES; do
+		local PKG_REPO=$(grep -Po "PKG_SOURCE_URL:=https://.*github.com/\K[^/]+/[^/]+(?=.*)" $PKG_FILE)
+		local PKG_TAG=$(curl -sL "https://api.github.com/repos/$PKG_REPO/releases" | jq -r "map(select(.prerelease == $PKG_MARK)) | first | .tag_name")
+
+		local OLD_VER=$(grep -Po "PKG_VERSION:=\K.*" "$PKG_FILE")
+		local OLD_URL=$(grep -Po "PKG_SOURCE_URL:=\K.*" "$PKG_FILE")
+		local OLD_FILE=$(grep -Po "PKG_SOURCE:=\K.*" "$PKG_FILE")
+		local OLD_HASH=$(grep -Po "PKG_HASH:=\K.*" "$PKG_FILE")
+
+		local PKG_URL=$([[ "$OLD_URL" == *"releases"* ]] && echo "${OLD_URL%/}/$OLD_FILE" || echo "${OLD_URL%/}")
+
+		local NEW_VER=$(echo $PKG_TAG | sed -E 's/[^0-9]+/\./g; s/^\.|\.$//g')
+		local NEW_URL=$(echo $PKG_URL | sed "s/\$(PKG_VERSION)/$NEW_VER/g; s/\$(PKG_NAME)/$PKG_NAME/g")
+		local NEW_HASH=$(curl -sL "$NEW_URL" | sha256sum | cut -d ' ' -f 1)
+
+		echo "old version: $OLD_VER $OLD_HASH"
+		echo "new version: $NEW_VER $NEW_HASH"
+
+		if [[ "$NEW_VER" =~ ^[0-9].* ]] && dpkg --compare-versions "$OLD_VER" lt "$NEW_VER"; then
+			sed -i "s/PKG_VERSION:=.*/PKG_VERSION:=$NEW_VER/g" "$PKG_FILE"
+			sed -i "s/PKG_HASH:=.*/PKG_HASH:=$NEW_HASH/g" "$PKG_FILE"
+			echo "$PKG_FILE version has been updated!"
+		else
+			echo "$PKG_FILE version is already the latest!"
+		fi
+	done
+}
+
+#UPDATE_VERSION "软件包名" "测试版，true，可选，默认为否"
+#UPDATE_VERSION "sing-box"
+
+#引入私有扩展脚本
+if [ -f "$GITHUB_WORKSPACE/Scripts/PRIVATE.sh" ]; then
+	source "$GITHUB_WORKSPACE/Scripts/PRIVATE.sh"
+fi
