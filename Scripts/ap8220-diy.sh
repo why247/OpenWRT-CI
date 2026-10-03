@@ -139,6 +139,11 @@ sysctl -w net.core.netdev_budget_usecs=8000 2>/dev/null
 # 低延迟：busy polling
 sysctl -w net.core.busy_poll=50 2>/dev/null
 sysctl -w net.core.busy_read=50 2>/dev/null
+# AQL (Airtime Queue Limits)：低延迟调优，ath11k via debugfs
+# 2000 2000 是论坛实测的低延迟值 (默认通常更高)
+for phy in /sys/kernel/debug/ieee80211/phy*/ath11k/aql_txq_limit; do
+    [ -w "$phy" ] && echo "2000 2000" > "$phy" 2>/dev/null
+done
 # 中断合并 (EDMA 网卡)
 for iface in eth0 eth1; do
 	ethtool -C $iface rx-usecs 100 tx-usecs 100 rx-frames 32 tx-frames 32 2>/dev/null
