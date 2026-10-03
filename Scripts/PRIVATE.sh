@@ -135,6 +135,21 @@ EOF
 echo "[3/6] sysctl.conf written!"
 
 #---------------------------------------------------------------
+# [3b/6] 禁用 flow_offloading（会绕过 TPROXY/redirect，必须关）
+#---------------------------------------------------------------
+mkdir -p "$PKG_DIR/base-files/files/etc/uci-defaults"
+cat > "$PKG_DIR/base-files/files/etc/uci-defaults/99z-disable-flowoffload" << 'FOEOF'
+#!/bin/sh
+# flow_offloading 会把已建连的流 offload 到 fastpath，跳过 nftables，
+# 导致 TPROXY/redirect 规则被绕过。必须确保关闭。
+uci set firewall.@defaults[0].flow_offloading='0' 2>/dev/null
+uci commit firewall 2>/dev/null
+exit 0
+FOEOF
+chmod +x "$PKG_DIR/base-files/files/etc/uci-defaults/99z-disable-flowoffload"
+echo "[3b/6] flow_offloading disable script written!"
+
+#---------------------------------------------------------------
 # [4/6] /etc/config/cpufreq 固定为 performance + 1382400
 #    直接覆盖 cpufreq 包自带的默认配置文件（package/emortal/cpufreq/files/
 #    cpufreq.config，包 Makefile 用 INSTALL_CONF 把它装成 /etc/config/cpufreq），
