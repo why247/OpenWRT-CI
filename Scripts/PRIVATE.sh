@@ -131,14 +131,6 @@ net.core.default_qdisc = fq
 net.ipv4.tcp_congestion_control = bbr
 net.ipv4.tcp_fastopen = 3
 net.core.netdev_max_backlog = 10000
-# conntrack: 代理高并发，max 加大，established 超时缩短及时回收
-net.netfilter.nf_conntrack_max = 65536
-net.netfilter.nf_conntrack_tcp_timeout_established = 7200
-net.netfilter.nf_conntrack_udp_timeout = 60
-net.netfilter.nf_conntrack_udp_timeout_stream = 180
-# VM: 1GB 内存，倾向保留文件缓存，swappiness 低（无 swap 时影响小）
-vm.swappiness = 10
-vm.vfs_cache_pressure = 50
 EOF
 echo "[3/6] sysctl.conf written!"
 
@@ -156,6 +148,21 @@ exit 0
 FOEOF
 chmod +x "$PKG_DIR/base-files/files/etc/uci-defaults/99z-disable-flowoffload"
 echo "[3b/6] flow_offloading disable script written!"
+
+#---------------------------------------------------------------
+# [3c/6] 文件描述符限制：sing-box 高并发需要更多 FD
+#---------------------------------------------------------------
+cat > "$PKG_DIR/base-files/files/etc/uci-defaults/99z-fd-limits" << 'FDEOF'
+#!/bin/sh
+# sing-box 代理高并发，FD 上限提到 65536
+ulimit -n 65536 2>/dev/null
+# 系统级
+echo 65536 > /proc/sys/fs/nr_open 2>/dev/null
+echo 65536 > /proc/sys/fs/file-max 2>/dev/null
+exit 0
+FDEOF
+chmod +x "$PKG_DIR/base-files/files/etc/uci-defaults/99z-fd-limits"
+echo "[3c/6] fd limits script written!"
 
 #---------------------------------------------------------------
 # [4/6] /etc/config/cpufreq 固定为 performance + 1382400
