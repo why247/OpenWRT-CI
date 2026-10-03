@@ -123,4 +123,26 @@ echo "NSS: off by default (not in ImmortalWrt)"
 echo "irqbalance: NOT installed (conflicts with smp_affinity)"
 echo "flow_offloading: disabled by PRIVATE.sh [3b/6]"
 echo ""
+#---------------------------------------------------------------
+# [5/5] 高爆发：TCP 大缓冲 + NAPI 预算 + 中断合并
+#---------------------------------------------------------------
+echo "=== AP8220 [5/5]: high burst tuning ==="
+cat > "$UCID_DIR/99-ap8220-burst" << 'BURST_EOF'
+#!/bin/sh
+# AP8220 (IPQ8071A) 高爆发优化，首次开机执行后自删除
+# TCP 大缓冲 (1GB RAM)
+sysctl -w net.ipv4.tcp_rmem="4096 87380 16777216" 2>/dev/null
+sysctl -w net.ipv4.tcp_wmem="4096 65536 16777216" 2>/dev/null
+# NAPI 预算提升
+sysctl -w net.core.netdev_budget=600 2>/dev/null
+sysctl -w net.core.netdev_budget_usecs=8000 2>/dev/null
+# 中断合并 (EDMA 网卡)
+for iface in eth0 eth1; do
+	ethtool -C $iface rx-usecs 100 tx-usecs 100 rx-frames 32 tx-frames 32 2>/dev/null
+done
+exit 0
+BURST_EOF
+chmod +x "$UCID_DIR/99-ap8220-burst"
+echo "Burst tuning written!"
+
 echo "AP8220 customizations applied!"
