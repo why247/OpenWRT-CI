@@ -217,22 +217,22 @@ if [ -f "$WIFI_UC" ]; then
 	sed -i '/if (band_name == "2G")/,/width = 80;/c\
 if (band_name == "2G") {\
 width = 20;\
-channel = 6;\
+channel = 9;\
 }\
 else if (band_name == "5G") {\
 width = band.max_width > 160 ? 160 : band.max_width;\
-channel = 149;\
+channel = 44;\
 }\
 else if (width > 80)\
 width = 80;' "$WIFI_UC"
 
-	# 国家代码统一 CN；并补上 txpower（2.4G 20dBm / 5G 25dBm / 其它频段 0=驱动默认）
-	sed -i "s@set \${s}\.country='\${country || ''}'@set \${s}.country='CN'
-set \${s}.txpower='\${band_name == '2g' ? 20 : (band_name == '5g' ? 25 : 0)}'@" "$WIFI_UC"
+	# 国家代码统一 US（最优功率）；并补上 txpower（2.4G 24dBm / 5G 25dBm / 其它频段 0=驱动默认）
+	sed -i "s@set \${s}\.country='\${country || ''}'@set \${s}.country='US'
+set \${s}.txpower='\${band_name == '2g' ? 24 : (band_name == '5g' ? 25 : 0)}'@" "$WIFI_UC"
 
-	if grep -q 'channel = 6;' "$WIFI_UC" && grep -q 'channel = 149;' "$WIFI_UC" \
-		&& grep -q "country='CN'" "$WIFI_UC" && grep -q 'txpower' "$WIFI_UC"; then
-		echo "[5/6] wifi generator patched (2.4G: CN ch6 HE20 20dBm, 5G: CN ch149 up-to-HE160 25dBm)!"
+	if grep -q 'channel = 9;' "$WIFI_UC" && grep -q 'channel = 44;' "$WIFI_UC" \
+		&& grep -q "country='US'" "$WIFI_UC" && grep -q 'txpower' "$WIFI_UC"; then
+		echo "[5/6] wifi generator patched (2.4G: US ch9 HE20 24dBm, 5G: US ch44 up-to-HE160 25dBm)!"
 	else
 		echo "[5/6] [WARN] wifi generator patch did not fully apply (upstream mac80211.uc changed?), relying on uci-defaults!"
 	fi
@@ -260,16 +260,16 @@ configure_wifi() {
 
 	case "$band" in
 	2g)
-		uci set wireless.$device.country='CN'
-		uci set wireless.$device.channel='6'
-		uci set wireless.$device.txpower='20'
+		uci set wireless.$device.country='US'
+		uci set wireless.$device.channel='9'
+		uci set wireless.$device.txpower='24'
 		case "$htmode" in
 		HE*) uci set wireless.$device.htmode='HE20' ;;
 		esac
 		;;
 	5g)
-		uci set wireless.$device.country='CN'
-		uci set wireless.$device.channel='149'
+		uci set wireless.$device.country='US'
+		uci set wireless.$device.channel='44'
 		uci set wireless.$device.txpower='25'
 		case "$htmode" in
 		HE*) uci set wireless.$device.htmode='HE160' ;;
