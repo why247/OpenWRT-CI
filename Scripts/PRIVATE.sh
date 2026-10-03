@@ -128,6 +128,9 @@ net.core.wmem_default = 4194304
 net.ipv4.udp_rmem_min = 8192
 net.ipv4.udp_wmem_min = 8192
 net.core.default_qdisc = fq
+net.ipv4.tcp_congestion_control = bbr
+net.ipv4.tcp_fastopen = 3
+net.core.netdev_max_backlog = 10000
 EOF
 echo "[3/6] sysctl.conf written!"
 
