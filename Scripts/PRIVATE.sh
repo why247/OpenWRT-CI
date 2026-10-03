@@ -323,3 +323,7 @@ sh "$GITHUB_WORKSPACE/Scripts/homeproxy-rt/apply-patches.sh" "$HP_SRC"
 # K3 专用定制 (bcm53xx/phicomm_k3 构建时执行，其它目标自动跳过)
 # 内容：asus-dhd24 WiFi 固件 / yangxu52 屏幕驱动 / hy2 sysctl+RPS / 无线覆盖 / sing-box 1.14.2 GO_ARM=5
 bash "$GITHUB_WORKSPACE/Scripts/k3-diy.sh"
+
+# AP8220 专用定制 (ipq807x 构建时执行，其它目标自动跳过)
+# 内容：RPS 四核全开 (mask f) + hotplug 持久化
+bash "$GITHUB_WORKSPACE/Scripts/ap8220-diy.sh"
