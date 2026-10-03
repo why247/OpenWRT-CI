@@ -131,6 +131,14 @@ net.core.default_qdisc = fq
 net.ipv4.tcp_congestion_control = bbr
 net.ipv4.tcp_fastopen = 3
 net.core.netdev_max_backlog = 10000
+# conntrack: 代理高并发，max 加大，established 超时缩短及时回收
+net.netfilter.nf_conntrack_max = 65536
+net.netfilter.nf_conntrack_tcp_timeout_established = 7200
+net.netfilter.nf_conntrack_udp_timeout = 60
+net.netfilter.nf_conntrack_udp_timeout_stream = 180
+# VM: 1GB 内存，倾向保留文件缓存，swappiness 低（无 swap 时影响小）
+vm.swappiness = 10
+vm.vfs_cache_pressure = 50
 EOF
 echo "[3/6] sysctl.conf written!"
 
