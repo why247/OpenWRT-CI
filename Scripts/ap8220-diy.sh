@@ -136,6 +136,9 @@ sysctl -w net.ipv4.tcp_wmem="4096 65536 16777216" 2>/dev/null
 # NAPI 预算提升
 sysctl -w net.core.netdev_budget=600 2>/dev/null
 sysctl -w net.core.netdev_budget_usecs=8000 2>/dev/null
+# 低延迟：busy polling
+sysctl -w net.core.busy_poll=50 2>/dev/null
+sysctl -w net.core.busy_read=50 2>/dev/null
 # 中断合并 (EDMA 网卡)
 for iface in eth0 eth1; do
 	ethtool -C $iface rx-usecs 100 tx-usecs 100 rx-frames 32 tx-frames 32 2>/dev/null
