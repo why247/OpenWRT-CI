@@ -279,15 +279,15 @@ configure_wifi() {
 	case "$band" in
 	2g)
 		uci set wireless.$device.country='CN'
-		uci set wireless.$device.channel='9'
-		uci set wireless.$device.txpower='24'
+		uci set wireless.$device.channel='6'
+		uci set wireless.$device.txpower='20'
 		case "$htmode" in
 		HE*) uci set wireless.$device.htmode='HE20' ;;
 		esac
 		;;
 	5g)
 		uci set wireless.$device.country='CN'
-		uci set wireless.$device.channel='44'
+		uci set wireless.$device.channel='149'
 		uci set wireless.$device.txpower='25'
 		case "$htmode" in
 		HE*) uci set wireless.$device.htmode='HE160' ;;
