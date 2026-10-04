@@ -1,26 +1,60 @@
-# --- AP8220 无线 (2026-10-04) ---
-mkdir -p "${WRT_DIR}/files/etc/uci-defaults"
-cat > "${WRT_DIR}/files/etc/uci-defaults/99-ap8220-wireless" <<'EOF'
+#!/bin/bash
+# AP8220 DIY script for OpenWRT-CI (IPQ807x/IPQ8071A)
+# 由 PRIVATE.sh 末尾调用
+# 用法: bash $GITHUB_WORKSPACE/Scripts/ap8220-diy.sh
+# 注意: 必须在 feeds update/install 之后、make defconfig 之前调用
+
+set -e
+
+echo " "
+echo "=============================================="
+echo "Applying AP8220 customizations..."
+echo "=============================================="
+
+#---------------------------------------------------------------
+# 定位 wrt 源码树 (照抄 PRIVATE.sh 的探测逻辑)
+#---------------------------------------------------------------
+if [ -d "./package/base-files" ]; then
+	WRT_DIR="$(pwd)"
+elif [ -d "./base-files" ]; then
+	WRT_DIR="$(cd .. && pwd)"
+else
+	echo "[ERROR] WRT source tree not found, AP8220 customizations skipped!"
+	exit 0
+fi
+
+PKG_DIR="$WRT_DIR/package"
+echo "WRT source tree: $WRT_DIR"
+
+# 只在 ipq807x/AP8220 构建时执行
+if [ -n "$WRT_TARGET" ] && [[ "${WRT_TARGET,,}" != *"ipq807x"* && "${WRT_TARGET,,}" != *"qualcommax"* ]]; then
+	echo "Not ipq807x/qualcommax target (WRT_TARGET=$WRT_TARGET), skipping AP8220 customizations."
+	exit 0
+fi
+
+UCID_DIR="$PKG_DIR/base-files/files/etc/uci-defaults"
+mkdir -p "$UCID_DIR"
+
+#---------------------------------------------------------------
+# [1/4] RPS: 四核全开 (mask f)，把收包软中断摊到 4 核
+#   EDMA 用 threaded NAPI，RX poll 已在 CPU1；RPS 把协议栈上半部再摊开。
+#   与官方 smp_affinity（管硬中断）正交，不冲突。不要装 irqbalance。
+#---------------------------------------------------------------
+echo "=== AP8220 [1/4]: RPS tune (mask f for quad-core) ==="
+cat > "$UCID_DIR/99-ap8220-rps" << 'RPS_EOF'
 #!/bin/sh
-uci -q batch <<'EOU'
-set wireless.radio0=wifi-device
-set wireless.radio0.type='mac80211'
-set wireless.radio0.channel='9'
-set wireless.radio0.band='2g'
-set wireless.radio0.htmode='HE20'
-set wireless.radio0.country='US'
-set wireless.radio0.txpower='24'
-set wireless.radio0.disabled='0'
-set wireless.radio1=wifi-device
-set wireless.radio1.type='mac80211'
-set wireless.radio1.channel='44'
-set wireless.radio1.band='5g'
-set wireless.radio1.htmode='HE160'
-set wireless.radio1.country='US'
-set wireless.radio1.txpower='25'
-set wireless.radio1.disabled='0'
-commit wireless
-EOU
-exit 0
-EOF
-chmod +x "${WRT_DIR}/files/etc/uci-defaults/99-ap8220-wireless"
+# AP8220 (IPQ8071A, 4x Cortex-A53) RPS 调优
+# 首次开机执行后自删除；mask f = CPU0+1+2+3 全开
+for q in /sys/class/net/*/queues/rx-*/rps_cpus; do
+	case "$q" in */lo/*) continue;; esac
+	[ -w "$q" ] && echo f > "$q" 2>/dev/null
+done
+# 持久化：hotplug 脚本，接口 up 时自动设置
+mkdir -p /etc/hotplug.d/net
+cat > /etc/hotplug.d/net/20-ap8220-rps <<'HOTPLUG_EOF'
+[ "$ACTION" = "add" ] || exit 0
+[ "$INTERFACE" = "lo" ] && exit 0
+for q in /sys/class/net/$INTERFACE/queues/rx-*/rps_cpus; do
+	[ -w "$q" ] && echo f > "$q" 2>/dev/null
+done
+HOTPLUG_E
