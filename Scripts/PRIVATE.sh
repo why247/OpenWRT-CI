@@ -357,3 +357,6 @@ bash "$GITHUB_WORKSPACE/Scripts/k3-diy.sh"
 # AP8220 专用定制 (ipq807x 构建时执行，其它目标自动跳过)
 # 内容：RPS 四核全开 (mask f) + hotplug 持久化
 bash "$GITHUB_WORKSPACE/Scripts/ap8220-diy.sh"
+
+# N1 专用定制 (armsr 构建时执行，其它目标自动跳过)
+bash "$GITHUB_WORKSPACE/Scripts/n1-diy.sh"
