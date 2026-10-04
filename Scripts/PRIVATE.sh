@@ -131,6 +131,9 @@ net.core.default_qdisc = fq
 net.ipv4.tcp_congestion_control = bbr
 net.ipv4.tcp_fastopen = 3
 net.core.netdev_max_backlog = 10000
+net.netfilter.nf_conntrack_max = 65536
+vm.min_free_kbytes = 16384
+vm.swappiness = 10
 EOF
 echo "[3/6] sysctl.conf written!"
 
