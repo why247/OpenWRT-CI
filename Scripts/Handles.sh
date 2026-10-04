@@ -59,3 +59,16 @@ if [ -d "$FEEDS_PATH/packages/lang/rust" ]; then
 		echo "rust fix failed; continuing!"
 	fi
 fi
+
+#应用HomeProxy redirect/tproxy补丁集
+HP_SRC="$PACKAGE_PATH/packages/luci-app-homeproxy"
+HP_RT="$(cd "$(dirname "$0")" && pwd)/homeproxy-rt"
+if [ -d "$HP_SRC" ] && [ -f "$HP_RT/apply-patches.sh" ]; then
+	echo " "
+	echo "Applying HomeProxy patch set..."
+	if sh "$HP_RT/apply-patches.sh" "$HP_SRC"; then
+		echo "HomeProxy patches applied!"
+	else
+		echo "HomeProxy patches FAILED; continuing!"
+	fi
+fi
