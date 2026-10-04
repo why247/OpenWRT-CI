@@ -57,4 +57,127 @@ cat > /etc/hotplug.d/net/20-ap8220-rps <<'HOTPLUG_EOF'
 for q in /sys/class/net/$INTERFACE/queues/rx-*/rps_cpus; do
 	[ -w "$q" ] && echo f > "$q" 2>/dev/null
 done
-HOTPLUG_E
+HOTPLUG_EOF
+chmod +x /etc/hotplug.d/net/20-ap8220-rps
+exit 0
+RPS_EOF
+chmod +x "$UCID_DIR/99-ap8220-rps"
+echo "RPS uci-defaults written!"
+
+#---------------------------------------------------------------
+# [2/4] XPS: 发送端包转向，把 WAN 口各 TX 队列绑定到不同 CPU
+#   RPS 管收包，XPS 管发包。HY2 在千兆下是 UDP 发送大户，减少发包锁竞争。
+#---------------------------------------------------------------
+echo "=== AP8220 [2/4]: XPS tune ==="
+cat > "$UCID_DIR/99-ap8220-xps" << 'XPS_EOF'
+#!/bin/sh
+# AP8220 XPS: TX 队列 -> CPU 一一对应，减少发包锁竞争
+# 首次开机执行后自删除
+for iface in eth0 eth1; do
+	i=0
+	for q in /sys/class/net/$iface/queues/tx-*/xps_cpus 2>/dev/null; do
+		[ -w "$q" ] || continue
+		# CPU mask: 1<<i (tx-0->CPU0, tx-1->CPU1, ...)
+		mask=$(printf '%x' $((1 << i)))
+		echo "$mask" > "$q" 2>/dev/null
+		i=$((i + 1))
+		[ $i -ge 4 ] && break
+	done
+done
+# Threaded NAPI: 让 NAPI 收包跑在独立内核线程，减少 softirq 抖动
+for t in /sys/class/net/eth*/threaded 2>/dev/null; do
+	[ -w "$t" ] && echo 1 > "$t" 2>/dev/null
+done
+# WAN 口 txqueuelen 1000->5000，突发时少丢包
+for iface in eth0; do
+	ip link set "$iface" txqueuelen 5000 2>/dev/null
+done
+exit 0
+XPS_EOF
+chmod +x "$UCID_DIR/99-ap8220-xps"
+echo "XPS uci-defaults written!"
+
+#---------------------------------------------------------------
+# [3/4] dnsmasq 缓存加大 (15000)，重复查询延迟下降
+#---------------------------------------------------------------
+echo "=== AP8220 [3/4]: dnsmasq cache ==="
+mkdir -p "$PKG_DIR/base-files/files/etc"
+# 通过 uci-defaults 设置，避免覆盖用户现有配置
+cat > "$UCID_DIR/99-ap8220-dnsmasq" << 'DNS_EOF'
+#!/bin/sh
+# dnsmasq 缓存 15000，1-2MB 内存换查询延迟下降
+uci -q get dhcp.@dnsmasq[0] >/dev/null 2>&1 || exit 0
+uci set dhcp.@dnsmasq[0].cachesize='15000'
+uci commit dhcp
+exit 0
+DNS_EOF
+chmod +x "$UCID_DIR/99-ap8220-dnsmasq"
+echo "dnsmasq uci-defaults written!"
+
+#---------------------------------------------------------------
+# [4/4] 确认：NSS 关闭，irqbalance 不装，flow_offloading 关
+#   （这些由 PRIVATE.sh 和 Config 控制，这里只做二次确认日志）
+#---------------------------------------------------------------
+echo "=== AP8220 [4/4]: sanity check ==="
+echo "NSS: off by default (not in ImmortalWrt)"
+echo "irqbalance: NOT installed (conflicts with smp_affinity)"
+echo "flow_offloading: disabled by PRIVATE.sh [3b/6]"
+echo ""
+#---------------------------------------------------------------
+# [5/5] 高爆发：TCP 大缓冲 + NAPI 预算 + 中断合并
+#---------------------------------------------------------------
+echo "=== AP8220 [5/5]: high burst tuning ==="
+cat > "$UCID_DIR/99-ap8220-burst" << 'BURST_EOF'
+#!/bin/sh
+# AP8220 (IPQ8071A) 高爆发优化，首次开机执行后自删除
+# TCP 大缓冲 (1GB RAM)
+sysctl -w net.ipv4.tcp_rmem="4096 87380 16777216" 2>/dev/null
+sysctl -w net.ipv4.tcp_wmem="4096 65536 16777216" 2>/dev/null
+# NAPI 预算提升
+sysctl -w net.core.netdev_budget=600 2>/dev/null
+sysctl -w net.core.netdev_budget_usecs=8000 2>/dev/null
+# 低延迟：busy polling
+sysctl -w net.core.busy_poll=50 2>/dev/null
+sysctl -w net.core.busy_read=50 2>/dev/null
+# AQL (Airtime Queue Limits)：低延迟调优，ath11k via debugfs
+# 2000 2000 是论坛实测的低延迟值 (默认通常更高)
+for phy in /sys/kernel/debug/ieee80211/phy*/ath11k/aql_txq_limit; do
+    [ -w "$phy" ] && echo "2000 2000" > "$phy" 2>/dev/null
+done
+# 中断合并 (EDMA 网卡)
+for iface in eth0 eth1; do
+	ethtool -C $iface rx-usecs 100 tx-usecs 100 rx-frames 32 tx-frames 32 2>/dev/null
+done
+exit 0
+BURST_EOF
+chmod +x "$UCID_DIR/99-ap8220-burst"
+echo "Burst tuning written!"
+
+echo "AP8220 customizations applied!"
+
+# --- AP8220 无线 (2026-10-04) ---
+mkdir -p "${WRT_DIR}/files/etc/uci-defaults"
+cat > "${WRT_DIR}/files/etc/uci-defaults/99-ap8220-wireless" <<'EOF'
+#!/bin/sh
+uci -q batch <<'EOU'
+set wireless.radio0=wifi-device
+set wireless.radio0.type='mac80211'
+set wireless.radio0.channel='9'
+set wireless.radio0.band='2g'
+set wireless.radio0.htmode='HE20'
+set wireless.radio0.country='US'
+set wireless.radio0.txpower='24'
+set wireless.radio0.disabled='0'
+set wireless.radio1=wifi-device
+set wireless.radio1.type='mac80211'
+set wireless.radio1.channel='44'
+set wireless.radio1.band='5g'
+set wireless.radio1.htmode='HE160'
+set wireless.radio1.country='US'
+set wireless.radio1.txpower='25'
+set wireless.radio1.disabled='0'
+commit wireless
+EOU
+exit 0
+EOF
+chmod +x "${WRT_DIR}/files/etc/uci-defaults/99-ap8220-wireless"
