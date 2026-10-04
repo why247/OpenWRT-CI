@@ -408,19 +408,10 @@ echo "=============================================="
 echo "N1 customizations applied!"
 echo "=============================================="
 
-# --- N1 IPv6 + DTB (2026-10-04) ---
+# --- N1 thresh DTB (2026-10-04) ---
 if [ -n "$WRT_DIR" ] && [ -d "$WRT_DIR/files" ]; then
-  mkdir -p "$WRT_DIR/files/etc/uci-defaults"
-  cat > "$WRT_DIR/files/etc/uci-defaults/99-n1-ipv6-off" <<'EOF'
-#!/bin/sh
-uci -q delete network.wan6 2>/dev/null
-uci -q set network.wan.ipv6='0'
-uci -q set network.lan.ipv6='0'
-uci -q commit network
-exit 0
-EOF
-  chmod +x "$WRT_DIR/files/etc/uci-defaults/99-n1-ipv6-off"
-  cat > "$WRT_DIR/files/etc/uci-defaults/99-n1-thresh-dtb" <<'EOF'
+mkdir -p "$WRT_DIR/files/etc/uci-defaults"
+	cat > "$WRT_DIR/files/etc/uci-defaults/99-n1-thresh-dtb" <<'EOF'
 #!/bin/sh
 UENV=/boot/uEnv.txt
 if [ -f "$UENV" ] && ! grep -q "thresh" "$UENV"; then
