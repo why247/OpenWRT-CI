@@ -69,6 +69,7 @@ if [ -d "$HP_SRC" ] && [ -f "$HP_RT/apply-patches.sh" ]; then
 	if sh "$HP_RT/apply-patches.sh" "$HP_SRC"; then
 		echo "HomeProxy patches applied!"
 	else
-		echo "HomeProxy patches FAILED; continuing!"
+		echo "HomeProxy patches FAILED! Aborting build." >&2
+		exit 1
 	fi
 fi
