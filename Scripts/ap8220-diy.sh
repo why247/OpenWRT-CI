@@ -46,7 +46,7 @@ cat > "$UCID_DIR/99-ap8220-rps" << 'RPS_EOF'
 # AP8220 (IPQ8071A, 4x Cortex-A53) RPS 调优
 # 首次开机执行后自删除；mask f = CPU0+1+2+3 全开
 for q in /sys/class/net/*/queues/rx-*/rps_cpus; do
-	case "$q" in */lo/*) continue;; esac
+	case "$q" in */lo/*|*/wlan*/*) continue;; esac
 	[ -w "$q" ] && echo f > "$q" 2>/dev/null
 done
 # 持久化：hotplug 脚本，接口 up 时自动设置
@@ -135,15 +135,7 @@ sysctl -w net.ipv4.tcp_rmem="4096 87380 16777216" 2>/dev/null
 sysctl -w net.ipv4.tcp_wmem="4096 65536 16777216" 2>/dev/null
 # NAPI 预算提升
 sysctl -w net.core.netdev_budget=600 2>/dev/null
-sysctl -w net.core.netdev_budget_usecs=8000 2>/dev/null
-# 低延迟：busy polling
-sysctl -w net.core.busy_poll=50 2>/dev/null
-sysctl -w net.core.busy_read=50 2>/dev/null
-# AQL (Airtime Queue Limits)：低延迟调优，ath11k via debugfs
-# 2000 2000 是论坛实测的低延迟值 (默认通常更高)
-for phy in /sys/kernel/debug/ieee80211/phy*/ath11k/aql_txq_limit; do
-    [ -w "$phy" ] && echo "2000 2000" > "$phy" 2>/dev/null
-done
+sysctl -w net.core.netdev_budget_usecs=2000 2>/dev/null
 # 中断合并 (EDMA 网卡)
 for iface in eth0 eth1; do
 	ethtool -C $iface rx-usecs 100 tx-usecs 100 rx-frames 32 tx-frames 32 2>/dev/null
