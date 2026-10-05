@@ -264,7 +264,7 @@ chmod +x "$HOTPLUG_DIR/10-disable-eee"
 # 注意: 通过 base-files 覆盖默认 network 配置
 #---------------------------------------------------------------
 echo "=== N1: network config ==="
-NETWORK_DIR="$PKG_DIR/base-files/files/etc/config"
+NETWORK_DIR="$WRT_DIR/files/etc/config"
 mkdir -p "$NETWORK_DIR"
 cat > "$NETWORK_DIR/network" << 'EOF'
 config interface 'loopback'
