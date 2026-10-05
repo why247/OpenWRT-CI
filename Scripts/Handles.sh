@@ -61,7 +61,7 @@ if [ -d "$FEEDS_PATH/packages/lang/rust" ]; then
 fi
 
 #应用HomeProxy redirect/tproxy补丁集
-HP_SRC="$PACKAGE_PATH/packages/luci-app-homeproxy"
+HP_SRC="$PACKAGE_PATH/luci-app-homeproxy"
 HP_RT="$(cd "$(dirname "$0")" && pwd)/homeproxy-rt"
 if [ -d "$HP_SRC" ] && [ -f "$HP_RT/apply-patches.sh" ]; then
 	echo " "
