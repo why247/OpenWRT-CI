@@ -71,6 +71,9 @@ uci -q commit luci
 # Ensure BBR sysctl settings are applied (in case sysctl.conf wasn't picked up)
 sysctl -w net.ipv4.tcp_congestion_control=bbr 2>/dev/null
 sysctl -w net.core.default_qdisc=fq 2>/dev/null
+# Enable software flow offloading (verified with Nikki TCP redirect + TPROXY, no proxy bypass)
+uci -q set firewall.@defaults[0].flow_offloading='1'
+uci -q commit firewall
 exit 0
 EOF
 chmod +x "$UCID_DIR/99-n1-defaults"
