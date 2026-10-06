@@ -68,6 +68,11 @@ if [ -d "$HP_SRC" ] && [ -f "$HP_RT/apply-patches.sh" ]; then
 	echo "Applying HomeProxy patch set..."
 	if sh "$HP_RT/apply-patches.sh" "$HP_SRC"; then
 		echo "HomeProxy patches applied!"
+		# 更新描述：TUN -> Redirect+TPROXY (用 sed，比 patch 更稳健)
+		sed -i 's|Sing-Box/TUN/AI Edition|Sing-Box/Redirect+TPROXY|g' "$HP_SRC/Makefile"
+		sed -i 's|Sing-Box/TUN/AI Edition|Sing-Box/Redirect+TPROXY|g' "$HP_SRC/htdocs/luci-static/resources/view/homeproxy/server.js"
+		sed -i 's|Sing-Box/TUN/AI Edition|Sing-Box/Redirect+TPROXY|g' "$HP_SRC/htdocs/luci-static/resources/view/homeproxy/client.js"
+		echo "HomeProxy description updated"
 	else
 		echo "HomeProxy patches FAILED! Aborting build." >&2
 		exit 1
