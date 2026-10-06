@@ -1,4 +1,5 @@
 #!/bin/bash
+
 # SPDX-License-Identifier: MIT
 # Copyright (C) 2026 VIKINGYFY
 
@@ -72,6 +73,7 @@ if [ -d "$HP_SRC" ] && [ -f "$HP_RT/apply-patches.sh" ]; then
 		sed -i 's|Sing-Box/TUN/AI Edition|Sing-Box/Redirect+TPROXY|g' "$HP_SRC/Makefile"
 		sed -i 's|Sing-Box/TUN/AI Edition|Sing-Box/Redirect+TPROXY|g' "$HP_SRC/htdocs/luci-static/resources/view/homeproxy/server.js"
 		sed -i 's|Sing-Box/TUN/AI Edition|Sing-Box/Redirect+TPROXY|g' "$HP_SRC/htdocs/luci-static/resources/view/homeproxy/client.js"
+		sed -i "s/import { isnan } from 'math';/const isnan = (x) => x !== x;/" "$HP_SRC/root/etc/homeproxy/scripts/generate_client.uc"
 		echo "HomeProxy description updated"
 	else
 		echo "HomeProxy patches FAILED! Aborting build." >&2
