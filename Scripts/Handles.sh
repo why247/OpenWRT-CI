@@ -74,6 +74,17 @@ if [ -d "$HP_SRC" ] && [ -f "$HP_RT/apply-patches.sh" ]; then
 		sed -i 's|Sing-Box/TUN/AI Edition|Sing-Box/Redirect+TPROXY|g' "$HP_SRC/htdocs/luci-static/resources/view/homeproxy/client.js"
 		sed -i "s/import { isnan } from 'math';/const isnan = (x) => x !== x;/" "$HP_SRC/root/etc/homeproxy/scripts/generate_client.uc"
 		echo "HomeProxy description updated"
+		CN_IP_DIR="$HP_SRC/root/etc/homeproxy/resources"
+		mkdir -p "$CN_IP_DIR"
+		if curl -fsSL --retry 3 --max-time 60 "https://cdn.jsdeliver.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geoip/cn.list" -o "$CN_IP_DIR/cn_ip.list.tmp"; then
+			if [ "$(wc -l < "$CN_IP_DIR/cn_ip.list.tmp")" -ge 8000 ]; then
+				mv "$CN_IP_DIR/cn_ip.list.tmp" "$CN_IP_DIR/cn_ip.list"
+				date -u +%Y-%m-%d > "$CN_IP_DIR/cn_ip.ver"
+				echo "Pre-seeded cn_ip.list"
+			else
+				rm -f "$CN_IP_DIR/cn_ip.list.tmp"
+			fi
+		fi
 	else
 		echo "HomeProxy patches FAILED! Aborting build." >&2
 		exit 1
