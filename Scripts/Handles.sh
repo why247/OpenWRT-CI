@@ -76,7 +76,7 @@ if [ -d "$HP_SRC" ] && [ -f "$HP_RT/apply-patches.sh" ]; then
 		echo "HomeProxy description updated"
 		CN_IP_DIR="$HP_SRC/root/etc/homeproxy/resources"
 		mkdir -p "$CN_IP_DIR"
-		if curl -fsSL --retry 3 --max-time 60 "https://cdn.jsdeliver.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geoip/cn.list" -o "$CN_IP_DIR/cn_ip.list.tmp"; then
+		if curl -fsSL --retry 3 --max-time 60 "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geoip/cn.list" -o "$CN_IP_DIR/cn_ip.list.tmp"; then
 			if [ "$(wc -l < "$CN_IP_DIR/cn_ip.list.tmp")" -ge 8000 ]; then
 				mv "$CN_IP_DIR/cn_ip.list.tmp" "$CN_IP_DIR/cn_ip.list"
 				date -u +%Y-%m-%d > "$CN_IP_DIR/cn_ip.ver"
