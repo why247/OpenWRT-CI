@@ -231,8 +231,8 @@ channel = 44;\
 else if (width > 80)\
 width = 80;' "$WIFI_UC"
 
-	# 国家代码统一 US（最优功率）；并补上 txpower（2.4G 24dBm / 5G 25dBm / 其它频段 0=驱动默认）
-	sed -i "s@set \${s}\.country='\${country || [^}]*}'@set \${s}.country='US'\nset \${s}.txpower='\${band_name == '2g' ? 15 : (band_name == '5g' ? 25 : 0)}'@" "$WIFI_UC"
+	# 国家代码统一 US（最优功率）；并补上 txpower（2.4G 20dBm / 5G 25dBm / 其它频段 0=驱动默认）
+	sed -i "s@set \${s}\.country='\${country || [^}]*}'@set \${s}.country='US'\nset \${s}.txpower='\${band_name == '2g' ? 20 : (band_name == '5g' ? 25 : 0)}'@" "$WIFI_UC"
 
 	if grep -q 'channel = "auto";' "$WIFI_UC" && grep -q 'channel = 44;' "$WIFI_UC" \
 		&& grep -q "country='US'" "$WIFI_UC" && grep -q 'txpower' "$WIFI_UC"; then
@@ -268,7 +268,7 @@ configure_wifi() {
 		uci set wireless.$device.country='US'
 		uci set wireless.$device.channel='auto'
 		uci set wireless.$device.channels='1 6 11'
-		uci set wireless.$device.txpower='15'
+		uci set wireless.$device.txpower='20'
 		case "$htmode" in
 		HE*) uci set wireless.$device.htmode='HE20' ;;
 		esac
