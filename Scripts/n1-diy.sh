@@ -79,166 +79,113 @@ EOF
 chmod +x "$UCID_DIR/99-n1-defaults"
 
 #---------------------------------------------------------------
-# [4/7] uci-defaults: 99-n1-perf (CPU/RPS/IRQ/网卡调优)
+# [4/7] /etc/init.d/n1-perf: 每次开机生效的性能调优 (uci-defaults 只跑一次，重启即失效)
 #---------------------------------------------------------------
-echo "=== N1 [4/7]: 99-n1-perf ==="
+echo "=== N1 [4/7]: n1-perf init ==="
+rm -f "$UCID_DIR/99-n1-perf" "$UCID_DIR/99-n1-kernel-perf"
+mkdir -p "$PKG_DIR/base-files/files/etc/init.d" "$PKG_DIR/base-files/files/usr/sbin"
+cat > "$PKG_DIR/base-files/files/etc/init.d/n1-perf" << 'EOF'
+#!/bin/sh /etc/rc.common
+# N1 (S905D) 性能调优：每次开机执行；n1-perf status 查看
+START=99
+EXTRA_COMMANDS="status"
+
+set_gov() {
+	# 双路径：policy* 与 cpu*/cpufreq 都写，兼容不同内核
+	for g in /sys/devices/system/cpu/cpufreq/policy*/scaling_governor \
+	         /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor; do
+		[ -w "$g" ] && echo performance > "$g" 2>/dev/null
+	done
+}
+
+start() {
+	set_gov
+	# 等 eth0
+	for i in 1 2 3 4 5 6 7 8 9 10; do [ -e /sys/class/net/eth0 ] && break; sleep 1; done
+	ethtool --set-eee eth0 eee off 2>/dev/null
+	# 硬中断 -> CPU1，RPS -> CPU0/2/3 (掩码 d)，互不抢核
+	irq=$(awk -F: '/eth0/{gsub(/ /,"",$1);print $1;exit}' /proc/interrupts)
+	[ -n "$irq" ] && echo 1 > /proc/irq/$irq/smp_affinity_list 2>/dev/null
+	for q in /sys/class/net/eth0/queues/rx-*/rps_cpus; do echo d > "$q" 2>/dev/null; done
+	for q in /sys/class/net/eth0/queues/rx-*/rps_flow_cnt; do echo 4096 > "$q" 2>/dev/null; done
+	echo 16384 > /proc/sys/net/core/rps_sock_flow_entries 2>/dev/null
+	# Ring 拉满；中断合并 20us 兼顾延迟与突发
+	mrx=$(ethtool -g eth0 2>/dev/null | awk '/^RX:/{print $2;exit}')
+	mtx=$(ethtool -g eth0 2>/dev/null | awk '/^TX:/{print $2;exit}')
+	[ -n "$mrx" ] && [ -n "$mtx" ] && ethtool -G eth0 rx "$mrx" tx "$mtx" 2>/dev/null
+	ethtool -K eth0 gro on gso on tso on rx on tx on sg on 2>/dev/null
+	ethtool -C eth0 rx-usecs 20 rx-frames 16 2>/dev/null
+	echo 2000 > /proc/sys/net/core/netdev_max_backlog
+	echo 600 > /proc/sys/net/core/netdev_budget
+	sysctl -qw net.ipv4.tcp_congestion_control=bbr net.core.default_qdisc=fq 2>/dev/null
+	for dev in /sys/bus/usb/devices/*/power/control; do [ -w "$dev" ] && echo auto > "$dev"; done
+	logger -t n1-perf "applied (irq=$irq)"
+}
+
+status() {
+	echo "governor: $(cat /sys/devices/system/cpu/cpufreq/policy0/scaling_governor 2>/dev/null) $(cat /sys/devices/system/cpu/cpufreq/policy0/scaling_cur_freq 2>/dev/null)kHz"
+	echo "link: $(ethtool eth0 2>/dev/null | awk -F': ' '/Speed|Duplex/{printf "%s ",$2}')"
+	echo "eee: $(ethtool --show-eee eth0 2>/dev/null | grep -m1 -i 'EEE status')"
+	echo "dtb: $(grep -h -o 'meson-gxl-s905d-phicomm-n1[^ ]*\.dtb' /boot/uEnv.txt 2>/dev/null)"
+	echo "rps: $(cat /sys/class/net/eth0/queues/rx-0/rps_cpus 2>/dev/null)"
+	echo "temp: $(( $(cat /sys/class/thermal/thermal_zone0/temp 2>/dev/null || echo 0) / 1000 ))C"
+	nft list flowtables 2>/dev/null | grep -q flowtable && echo "flow offload: on" || echo "flow offload: off"
+}
+EOF
+chmod +x "$PKG_DIR/base-files/files/etc/init.d/n1-perf"
+
 cat > "$UCID_DIR/99-n1-perf" << 'EOF'
 #!/bin/sh
-# N1 (S905D) 性能优化 - 首次开机执行
-
-# --- 1. CPU governor -> performance (S905D 突发负载升频延迟, 直接锁最高频) ---
-for gov in /sys/devices/system/cpu/cpufreq/policy*/scaling_governor /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor; do
-    [ -w "$gov" ] && echo performance > "$gov" 2>/dev/null
-done
-
-# --- 2. Threaded NAPI (RPS 生效的前提, 节点存在才开) ---
-if [ -w /sys/class/net/eth0/threaded ]; then
-    echo 1 > /sys/class/net/eth0/threaded 2>/dev/null
-fi
-
-# --- 3. RPS: 按实际 CPU 数生成 mask (N1=4核 -> f) ---
-# 等待 eth0 就绪 (uci-defaults 时网卡可能还没起来)
-for i in 1 2 3 4 5; do
-    [ -e /sys/class/net/eth0/queues/rx-0/rps_cpus ] && break
-    sleep 2
-done
-nproc=$(nproc 2>/dev/null || echo 4)
-# 生成全核 mask: 4核->f, 以此类推
-mask=$(printf '%x' $(( (1 << nproc) - 1 )) )
-for q in /sys/class/net/eth0/queues/rx-*/rps_cpus; do
-    [ -w "$q" ] && echo "$mask" > "$q" 2>/dev/null
-done
-
-# --- 3b. 硬 IRQ 绑 CPU1 (dwmac 单队列单 IRQ, RPS 已摊软中断) ---
-# 实测: smp_affinity 写 hex mask '2' 会 EINVAL, 用 smp_affinity_list 写 '1' 才行
-eth_irq=$(grep -l 'eth0' /proc/irq/*/actions 2>/dev/null | head -1 | cut -d/ -f4)
-if [ -n "$eth_irq" ] && [ -w "/proc/irq/$eth_irq/smp_affinity_list" ]; then
-    echo "1" > "/proc/irq/$eth_irq/smp_affinity_list" 2>/dev/null
-fi
-
-# --- 4. Ring Buffer 拉到驱动报告的最大值 (禁止硬编码, 先读 ethtool -g) ---
-if command -v ethtool >/dev/null 2>&1; then
-    # 解析 "RX: 4096" 这类 Pre-set maximums 行
-    max_rx=$(ethtool -g eth0 2>/dev/null | awk '/^RX:/{print $2; exit}')
-    max_tx=$(ethtool -g eth0 2>/dev/null | awk '/^TX:/{print $2; exit}')
-    [ -n "$max_rx" ] && [ -n "$max_tx" ] && \
-        ethtool -G eth0 rx "$max_rx" tx "$max_tx" 2>/dev/null
-fi
-
-# --- 5. GRO / 校验和 offload 保持开启 (QUIC 收包依赖) ---
-if command -v ethtool >/dev/null 2>&1; then
-    ethtool -K eth0 gro on rx on tx on 2>/dev/null
-    # 高爆发：中断合并，减少高吞吐时的中断开销
-    # rx-usecs 100 = 100微秒内合并中断，tx-frames 32 = 32帧合并一次
-    ethtool -C eth0 rx-usecs 100 tx-usecs 100 rx-frames 32 tx-frames 32 2>/dev/null
-fi
-
-# --- 6. 系统日志走内存, 不写 eMMC (eMMC 随机写差, 延长寿命) ---
+/etc/init.d/n1-perf enable
+# 晶晨宝盒 CPU 设置也写成 performance（双路径之二，宝盒的 cpufreq 服务会读它）
+uci -q set amlogic.armcpu.governor0='performance'
+uci -q set amlogic.armcpu.maxfreq0='1512000'
+uci -q set amlogic.armcpu.minfreq0='1512000'
+# 晶晨宝盒在线升级：固件从本仓库 N1 Release 取，内核从 ophub flippy 6.18 取
+uci -q set amlogic.config.amlogic_firmware_repo='https://github.com/why247/OpenWRT-CI'
+uci -q set amlogic.config.amlogic_firmware_tag='ARMSR-N1'
+uci -q set amlogic.config.amlogic_firmware_suffix='.img.gz'
+uci -q set amlogic.config.amlogic_kernel_path='https://github.com/ophub/kernel'
+uci -q set amlogic.config.amlogic_kernel_tags='kernel_flippy'
+uci -q set amlogic.config.amlogic_kernel_branch='6.18'
+uci -q commit amlogic
+# 日志进内存，保护 eMMC
 uci -q set system.@system[0].log_buffer_size='256'
-uci -q set system.@system[0].log_file='/tmp/system.log'
 uci -q commit system
-
-# --- 7. Go 运行时: 只保留 madvdontneed ---
-if [ -f /etc/init.d/homeproxy ]; then
-    grep -q 'GODEBUG=madvdontneed=1' /etc/init.d/homeproxy || \
-        sed -i '1a export GODEBUG=madvdontneed=1' /etc/init.d/homeproxy
-fi
-
-# --- 散热：USB 自动休眠 (降温 1-3°C，S905D 80°C 降频红线) ---
-for dev in /sys/bus/usb/devices/*/power/control; do
-    [ -w "$dev" ] && echo auto > "$dev" 2>/dev/null
-done
-
 exit 0
 EOF
 chmod +x "$UCID_DIR/99-n1-perf"
 
 #---------------------------------------------------------------
-# [5/7] uci-defaults: 99-n1-kernel-perf (内核启动参数)
-# 注意: flippy 的 uEnv.txt 用 APPEND= 不是 extraargs=
+# [5/7] 内核参数: 只加 audit=0（去掉 isolcpus=3：没绑核时纯属浪费一个核）
 #---------------------------------------------------------------
-echo "=== N1 [5/7]: 99-n1-kernel-perf ==="
-cat > "$UCID_DIR/99-n1-kernel-perf" << 'EOF'
-#!/bin/sh
-# 99-n1-kernel-perf: 首次启动添加内核性能参数到 uEnv.txt
-# isolcpus=3: 隔离 CPU3 给 sing-box
-# rcu_nocbs=3: RCU 回调从 CPU3 卸载
-# audit=0: 关闭内核审计，减开销
-# 注意：flippy 的 uEnv.txt 用 APPEND= 不是 extraargs=
-
-UENV="/boot/uEnv.txt"
-PERF_ARGS="isolcpus=3 rcu_nocbs=3 audit=0"
-
-# /boot 可能还没挂载，等待一下（U盘启动较慢，等30秒）
-for i in $(seq 1 15); do
-    [ -f "$UENV" ] && break
-    sleep 2
-done
-
-[ -f "$UENV" ] || { logger -t n1-kernel-perf "ERROR: $UENV not found after 30s"; exit 1; }
-
-# 已经加过了就跳过
-grep -q "isolcpus=3" "$UENV" 2>/dev/null && exit 0
-
-# 备份原文件
-cp "$UENV" "$UENV.bak" 2>/dev/null
-
-# 追加到 APPEND= 行（flippy 格式）
-if grep -q "^APPEND=" "$UENV"; then
-    sed -i "s/^APPEND=\(.*\)/APPEND=\1 $PERF_ARGS/" "$UENV"
-else
-    echo "APPEND=$PERF_ARGS" >> "$UENV"
-fi
-
-# 记录日志
-logger -t n1-kernel-perf "Added kernel perf args: $PERF_ARGS (backup: $UENV.bak)"
-
-exit 0
-EOF
-chmod +x "$UCID_DIR/99-n1-kernel-perf"
-
+echo "=== N1 [5/7]: kernel args ==="
 #---------------------------------------------------------------
-# [6/7] uci-defaults: 99-n1-thresh-dtb (thresh DTB 自动切换)
+# [6/7] uci-defaults: 99-n1-thresh-dtb (thresh DTB 自动切换 + 备份 uEnv.txt)
 #---------------------------------------------------------------
 echo "=== N1 [6/7]: 99-n1-thresh-dtb ==="
 cat > "$UCID_DIR/99-n1-thresh-dtb" << 'EOF'
 #!/bin/sh
-# 99-n1-thresh-dtb: 首次启动自动切换到 thresh 版 DTB
-# thresh DTB 启用 snps,force_thresh_dma_mode，解决单臂模式下
-# 交换机流控协商失败导致的单连接测速腰斩问题
-# 只在 thresh 文件存在且当前不是 thresh 时才切换
-
-THRESH_DTB="meson-gxl-s905d-phicomm-n1-thresh.dtb"
-UENV="/boot/uEnv.txt"
-
-# /boot 可能还没挂载，等待一下
-for i in 1 2 3 4 5; do
-    [ -f "$UENV" ] && break
-    sleep 2
-done
-
+# thresh DTB 启用 snps,force_thresh_dma_mode，解决 N1 单臂单连接测速腰斩
+UENV=/boot/uEnv.txt
+T=meson-gxl-s905d-phicomm-n1-thresh.dtb
+for i in $(seq 1 15); do [ -f "$UENV" ] && break; sleep 2; done
 [ -f "$UENV" ] || exit 0
-
-# thresh 文件存在吗？
-THRESH_PATH=""
-for d in /boot/dtb/amlogic /dtb/amlogic; do
-    if [ -f "$d/$THRESH_DTB" ]; then
-        THRESH_PATH="$d/$THRESH_DTB"
-        break
-    fi
-done
-[ -n "$THRESH_PATH" ] || exit 0
-
-# 已经是 thresh 了就不动
-grep -q "$THRESH_DTB" "$UENV" && exit 0
-
-# 备份并切换
-cp "$UENV" "$UENV.bak.nothresh" 2>/dev/null
-sed -i "s|meson-gxl-s905d-phicomm-n1\.dtb|$THRESH_DTB|g" "$UENV"
-
-# 记录日志
-logger -t n1-thresh-dtb "Switched to $THRESH_DTB, reboot to take effect"
-
+if ! grep -q "$T" "$UENV"; then
+	F=""
+	for d in /boot/dtb/amlogic /dtb/amlogic; do [ -f "$d/$T" ] && F=1; done
+	if [ -n "$F" ]; then
+		cp -f "$UENV" "$UENV.bak.nothresh"
+		sed -i "s|meson-gxl-s905d-phicomm-n1\.dtb|$T|g" "$UENV"
+		grep -q "$T" "$UENV" || sed -i "s|^FDT=.*|FDT=/dtb/amlogic/$T|" "$UENV"
+		logger -t n1-thresh-dtb "switched to $T (backup $UENV.bak.nothresh), reboot to apply"
+	else
+		logger -t n1-thresh-dtb "$T not found, skipped"
+	fi
+fi
+# audit=0 追加到 APPEND 行；清除旧版的 isolcpus/rcu_nocbs
+sed -i 's/ isolcpus=3//; s/ rcu_nocbs=3//' "$UENV"
+grep -q 'audit=0' "$UENV" || sed -i 's/^APPEND=\(.*\)/APPEND=\1 audit=0/' "$UENV"
 exit 0
 EOF
 chmod +x "$UCID_DIR/99-n1-thresh-dtb"
@@ -277,8 +224,7 @@ config interface 'loopback'
 	option netmask '255.0.0.0'
 
 config globals 'globals'
-	option packet_steering '1'
-	option steering_flows '256'
+	option packet_steering '0'
 
 config device
 	option name 'eth0'
@@ -320,7 +266,7 @@ config dnsmasq
 	option expandhosts '1'
 	option min_cache_ttl '3600'
 	option use_stale_cache '3600'
-	option cachesize '1000'
+	option cachesize '10000'
 	option nonegcache '1'
 	option authoritative '1'
 	option readethers '1'
@@ -370,15 +316,14 @@ config service 'my3322'
 	option username 'your-3322-username'
 	option password 'your-3322-password'
 	option interface 'wan'
-	option ip_source 'web'
-	option ip_url 'http://members.3322.org/dyndns/getip'
-	option check_interval '10'
+	option ip_source 'network'
+	option ip_network 'wan'
+	option use_ipv6 '0'
+	option check_interval '5'
 	option check_unit 'minutes'
 	option force_interval '72'
 	option force_unit 'hours'
 	option use_https '0'
-	# 3322.org 更新接口（兼容 dyndns2 协议）
-	option update_url 'http://members.3322.org/dyndns/update?hostname=[DOMAIN]&myip=[IP]'
 EOF
 
 #---------------------------------------------------------------
@@ -411,17 +356,3 @@ echo "=============================================="
 echo "N1 customizations applied!"
 echo "=============================================="
 
-# --- N1 thresh DTB (2026-10-04) ---
-if [ -n "$WRT_DIR" ] && [ -d "$WRT_DIR/files" ]; then
-mkdir -p "$WRT_DIR/files/etc/uci-defaults"
-	cat > "$WRT_DIR/files/etc/uci-defaults/99-n1-thresh-dtb" <<'EOF'
-#!/bin/sh
-UENV=/boot/uEnv.txt
-if [ -f "$UENV" ] && ! grep -q "thresh" "$UENV"; then
-  cp -f "$UENV" "$UENV.bak.$(date +%Y%m%d)"
-  sed -i "s|^FDT=.*|FDT=/dtb/amlogic/meson-gxl-s905d-phicomm-n1-thresh.dtb|" "$UENV"
-fi
-exit 0
-EOF
-  chmod +x "$WRT_DIR/files/etc/uci-defaults/99-n1-thresh-dtb"
-fi
