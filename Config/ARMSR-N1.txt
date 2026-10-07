@@ -8,7 +8,14 @@ CONFIG_TARGET_armsr_armv8=y
 CONFIG_TARGET_armsr_armv8_DEVICE_generic=y
 CONFIG_JSON_OVERVIEW_IMAGE_INFO=n
 CONFIG_TARGET_ROOTFS_TARGZ=y
-CONFIG_TARGET_ROOTFS_SQUASHFS=y
+# 只要 rootfs.tar.gz 给 ophub 打包，其余镜像不生成（省编译时间）
+# CONFIG_TARGET_ROOTFS_SQUASHFS is not set
+# CONFIG_TARGET_ROOTFS_EXT4FS is not set
+# CONFIG_TARGET_ROOTFS_CPIOGZ is not set
+# CONFIG_TARGET_ROOTFS_INITRAMFS is not set
+# CONFIG_GRUB_EFI_IMAGES is not set
+# CONFIG_GRUB_IMAGES is not set
+# CONFIG_EFI_IMAGES is not set
 
 
 # luci 插件（按需精简）
@@ -64,6 +71,7 @@ CONFIG_PACKAGE_luci-proto-ipv6=y
 # BBR 拥塞控制 + fq 调度器
 CONFIG_PACKAGE_kmod-tcp-bbr=y
 CONFIG_PACKAGE_kmod-sched-fq=y
+CONFIG_PACKAGE_kmod-sched-core=y
 
 
 # nftables: TPROXY + socket (HomeProxy UDP TPROXY 需要)
