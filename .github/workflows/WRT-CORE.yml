@@ -241,7 +241,9 @@ jobs:
               mv -f $FILE ./upload/$NEW_FILE
             done
 
+            mkdir -p ./upload
             find ./bin/targets/ -type f -exec mv -f {} ./upload/ \;
+            ls -lh ./upload/ | head -10
 
           make clean -j$(nproc)
           fi
