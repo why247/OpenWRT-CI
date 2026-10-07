@@ -34,7 +34,7 @@ fi
 UCID_DIR="$PKG_DIR/base-files/files/etc/uci-defaults"
 mkdir -p "$UCID_DIR"
 
-# [1/2] dnsmasq 缓存 15000，1-2MB 内存换重复查询零延迟
+# [1/3] dnsmasq 缓存 15000，1-2MB 内存换重复查询零延迟
 cat > "$UCID_DIR/99-ap8220-dnsmasq" << 'DNS_EOF'
 #!/bin/sh
 uci -q get dhcp.@dnsmasq[0] >/dev/null 2>&1 || exit 0
@@ -43,15 +43,48 @@ uci commit dhcp
 exit 0
 DNS_EOF
 chmod +x "$UCID_DIR/99-ap8220-dnsmasq"
-echo "[1/2] dnsmasq cache 15000"
+echo "[1/3] dnsmasq cache 15000"
 
-# [2/2] 清理旧版本留下的自定义 RPS hotplug，交还给上游 packet steering
+# [2/3] 清理旧版本留下的自定义 RPS hotplug，交还给上游 packet steering
 cat > "$UCID_DIR/99-ap8220-cleanup" << 'CL_EOF'
 #!/bin/sh
 rm -f /etc/hotplug.d/net/20-ap8220-rps
 exit 0
 CL_EOF
 chmod +x "$UCID_DIR/99-ap8220-cleanup"
-echo "[2/2] legacy RPS hotplug cleanup"
+echo "[2/3] legacy RPS hotplug cleanup"
+
+# [3/3] 开机强制 performance（cpufreq 包配置在 qualcommax 上不生效，实测为 schedutil）
+#       调频切换会让突发流量第一拍落在低频上，固定满频换取最低延迟
+INIT_DIR="$PKG_DIR/base-files/files/etc/init.d"
+mkdir -p "$INIT_DIR"
+cat > "$INIT_DIR/ap8220-perf" << 'PERF_EOF'
+#!/bin/sh /etc/rc.common
+START=99
+EXTRA_COMMANDS="status"
+
+start() {
+	for g in /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor \
+		/sys/devices/system/cpu/cpufreq/policy*/scaling_governor; do
+		[ -w "$g" ] && echo performance > "$g" 2>/dev/null
+	done
+	sysctl -q -w net.netfilter.nf_conntrack_max=262144 2>/dev/null
+	logger -t ap8220-perf "governor=$(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor 2>/dev/null)"
+}
+
+status() {
+	cat /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor 2>/dev/null | sort | uniq -c
+	cat /sys/devices/system/cpu/cpu*/cpufreq/scaling_cur_freq 2>/dev/null | sort | uniq -c
+	sysctl net.netfilter.nf_conntrack_max
+}
+PERF_EOF
+chmod +x "$INIT_DIR/ap8220-perf"
+cat > "$UCID_DIR/99-ap8220-perf" << 'PE_EOF'
+#!/bin/sh
+/etc/init.d/ap8220-perf enable
+exit 0
+PE_EOF
+chmod +x "$UCID_DIR/99-ap8220-perf"
+echo "[3/3] performance governor init script"
 
 echo "AP8220 customizations applied!"
