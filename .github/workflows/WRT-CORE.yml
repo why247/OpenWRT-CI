@@ -221,6 +221,26 @@ jobs:
           du -h --max-depth=1
           echo "======================="
 
+      - name: Package ARMSR img
+        if: env.WRT_TARGET == 'armsr'
+        uses: ophub/amlogic-s9xxx-openwrt@main
+        with:
+          openwrt_path: wrt/bin/targets/armsr/armv8/*rootfs.tar.gz
+          openwrt_board: s905d
+          kernel_repo: ophub/kernel
+          kernel_usage: flippy
+          openwrt_kernel: 6.12.y
+          builder_name: N1-ImmortalWrt
+
+      - name: Copy ARMSR img to upload
+        if: env.WRT_TARGET == 'armsr'
+        run: |
+          mkdir -p ./wrt/upload
+          if [[ -n "${{ env.PACKAGED_OUTPUTPATH }}" ]]; then
+            cp -f ${{ env.PACKAGED_OUTPUTPATH }}/*.img.gz ./wrt/upload/ 2>/dev/null || true
+            ls -lh ./wrt/upload/*.img.gz 2>/dev/null || echo "No img.gz found"
+          fi
+
       - name: Package Firmware
         run: |
           cd ./wrt/ && mkdir ./upload/
@@ -246,25 +266,6 @@ jobs:
             ls -lh ./upload/ | head -10
 
           make clean -j$(nproc)
-          fi
-
-      - name: Package ARMSR img
-        if: env.WRT_TARGET == 'armsr'
-        uses: ophub/amlogic-s9xxx-openwrt@main
-        with:
-          openwrt_path: wrt/upload/*rootfs.tar.gz
-          openwrt_board: s905d
-          kernel_repo: ophub/kernel
-          kernel_usage: flippy
-          openwrt_kernel: 6.12.y
-          builder_name: N1-ImmortalWrt
-
-      - name: Copy ARMSR img to upload
-        if: env.WRT_TARGET == 'armsr'
-        run: |
-          if [[ -n "${{ env.PACKAGED_OUTPUTPATH }}" ]]; then
-            cp -f ${{ env.PACKAGED_OUTPUTPATH }}/*.img.gz ./wrt/upload/ 2>/dev/null || true
-            ls -lh ./wrt/upload/*.img.gz 2>/dev/null || echo "No img.gz found"
           fi
 
       - name: Release Firmware
