@@ -34,16 +34,16 @@ fi
 UCID_DIR="$PKG_DIR/base-files/files/etc/uci-defaults"
 mkdir -p "$UCID_DIR"
 
-# [1/3] dnsmasq 缓存 15000，1-2MB 内存换重复查询零延迟
+# [1/3] dnsmasq 缓存 10000（dnsmasq 2.9x 超过 10000 会告警），1-2MB 内存换重复查询零延迟
 cat > "$UCID_DIR/99-ap8220-dnsmasq" << 'DNS_EOF'
 #!/bin/sh
 uci -q get dhcp.@dnsmasq[0] >/dev/null 2>&1 || exit 0
-uci set dhcp.@dnsmasq[0].cachesize='15000'
+uci set dhcp.@dnsmasq[0].cachesize='10000'
 uci commit dhcp
 exit 0
 DNS_EOF
 chmod +x "$UCID_DIR/99-ap8220-dnsmasq"
-echo "[1/3] dnsmasq cache 15000"
+echo "[1/3] dnsmasq cache 10000"
 
 # [2/3] 清理旧版本留下的自定义 RPS hotplug，交还给上游 packet steering
 cat > "$UCID_DIR/99-ap8220-cleanup" << 'CL_EOF'
