@@ -229,7 +229,7 @@ jobs:
           openwrt_board: s905d
           kernel_repo: ophub/kernel
           kernel_usage: flippy
-          openwrt_kernel: 6.12.y
+          openwrt_kernel: 6.18.y
           builder_name: N1-ImmortalWrt
 
       - name: Copy ARMSR img to upload
@@ -243,7 +243,7 @@ jobs:
 
       - name: Package Firmware
         run: |
-          cd ./wrt/ && mkdir ./upload/
+          cd ./wrt/ && mkdir -p ./upload/
 
           cp -f ./.config ./upload/Config-"$WRT_CONFIG"-"$WRT_INFO"-"$WRT_BRANCH"-"$WRT_DATE".txt
 
