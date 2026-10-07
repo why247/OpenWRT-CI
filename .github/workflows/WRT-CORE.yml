@@ -245,7 +245,7 @@ jobs:
         run: |
           cd ./wrt/ && mkdir -p ./upload/
 
-          cp -f ./.config ./upload/Config-"$WRT_CONFIG"-"$WRT_INFO"-"$WRT_BRANCH"-"$WRT_DATE".txt
+          [[ "$WRT_TARGET" == "armsr" ]] || cp -f ./.config ./upload/Config-"$WRT_CONFIG"-"$WRT_INFO"-"$WRT_BRANCH"-"$WRT_DATE".txt
 
           if [[ "$WRT_TEST" != 'true' ]]; then
             echo "WRT_KVER=$(find ./bin/targets/ -type f -name "*.manifest" -exec grep -oP '^kernel - \K[\d\.]+' {} \;)" >> $GITHUB_ENV
@@ -253,6 +253,8 @@ jobs:
             echo "WRT_WIFI=$(printf '%s' "$WRT_CONFIG" | grep -oE 'WIFI-(YES|NO)$' || true)" >> $GITHUB_ENV
 
             find ./bin/targets/ -iregex ".*\(buildinfo\|json\|sha256sums\|packages\)$" -exec rm -rf {} +
+            # N1(armsr) 只发布 ophub 打包的 .img.gz，通用 armsr 镜像/rootfs 不上传
+            [[ "$WRT_TARGET" == "armsr" ]] && rm -rf ./bin/targets/*
 
             for FILE in $(find ./bin/targets/ -type f -iname "*$WRT_TARGET*") ; do
               EXT=$(basename $FILE | cut -d '.' -f 2-)
