@@ -69,8 +69,6 @@ uci -q commit luci
 uci -q set luci.main.lang='zh_cn'
 uci -q commit luci
 # Ensure BBR sysctl settings are applied (in case sysctl.conf wasn't picked up)
-sysctl -w net.ipv4.tcp_congestion_control=bbr 2>/dev/null
-sysctl -w net.core.default_qdisc=fq 2>/dev/null
 # Enable software flow offloading (verified with Nikki TCP redirect + TPROXY, no proxy bypass)
 uci -q set firewall.@defaults[0].flow_offloading='1'
 uci -q commit firewall
@@ -117,7 +115,22 @@ start() {
 	ethtool -C eth0 rx-usecs 20 rx-frames 16 2>/dev/null
 	echo 2000 > /proc/sys/net/core/netdev_max_backlog
 	echo 600 > /proc/sys/net/core/netdev_budget
-	sysctl -qw net.ipv4.tcp_congestion_control=bbr net.core.default_qdisc=fq 2>/dev/null
+	# 路由转发用 fq_codel 压排队延迟；BBR 自带 pacing，不依赖 fq
+	sysctl -qw net.core.default_qdisc=fq_codel net.ipv4.tcp_congestion_control=bbr 2>/dev/null
+	tc qdisc replace dev eth0 root fq_codel 2>/dev/null
+	# quic-go/HY2 需要大 UDP 缓冲 (官方建议 >=7.5MB)，否则突发丢包
+	sysctl -qw net.core.rmem_max=16777216 net.core.wmem_max=16777216 \
+		net.core.rmem_default=1048576 net.core.wmem_default=1048576 \
+		net.ipv4.udp_rmem_min=16384 net.ipv4.udp_wmem_min=16384 2>/dev/null
+	# 连接跟踪：2GB 内存放宽，缩短 UDP 超时
+	sysctl -qw net.netfilter.nf_conntrack_max=262144 \
+		net.netfilter.nf_conntrack_udp_timeout=30 \
+		net.netfilter.nf_conntrack_udp_timeout_stream=120 \
+		net.netfilter.nf_conntrack_tcp_timeout_established=7200 2>/dev/null
+	# 关 CPU 深度空闲状态：省掉唤醒延迟（换几度温度）
+	for st in /sys/devices/system/cpu/cpu*/cpuidle/state[1-9]/disable; do
+		[ -w "$st" ] && echo 1 > "$st"
+	done
 	for dev in /sys/bus/usb/devices/*/power/control; do [ -w "$dev" ] && echo auto > "$dev"; done
 	logger -t n1-perf "applied (irq=$irq)"
 }
