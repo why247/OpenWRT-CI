@@ -123,11 +123,11 @@ mkdir -p "$PKG_DIR/base-files/files/etc"
 cat > "$PKG_DIR/base-files/files/etc/sysctl.conf" << 'EOF'
 net.core.rmem_max = 16777216
 net.core.wmem_max = 16777216
-net.core.rmem_default = 4194304
-net.core.wmem_default = 4194304
+net.core.rmem_default = 262144
+net.core.wmem_default = 262144
 net.ipv4.udp_rmem_min = 8192
 net.ipv4.udp_wmem_min = 8192
-net.core.default_qdisc = fq
+net.core.default_qdisc = fq_codel
 net.ipv4.tcp_congestion_control = bbr
 net.ipv4.tcp_fastopen = 3
 net.core.netdev_max_backlog = 10000
@@ -138,34 +138,21 @@ EOF
 echo "[3/6] sysctl.conf written!"
 
 #---------------------------------------------------------------
-# [3b/6] 禁用 flow_offloading（会绕过 TPROXY/redirect，必须关）
+# [3b/6] 开启 flow offload + PPE 硬件卸载
+#    上游 qualcommax 带 PPE flowtable 硬件卸载（含 Wi-Fi），国内直连交给硬件，
+#    CPU 全部留给 HY2。被代理的连接终止在本机 sing-box（redirect/TPROXY），
+#    不经过 forward 链，不会被卸载，所以不影响 HomeProxy。
 #---------------------------------------------------------------
 mkdir -p "$PKG_DIR/base-files/files/etc/uci-defaults"
-cat > "$PKG_DIR/base-files/files/etc/uci-defaults/99z-disable-flowoffload" << 'FOEOF'
+cat > "$PKG_DIR/base-files/files/etc/uci-defaults/99z-flowoffload" << 'FOEOF'
 #!/bin/sh
-# flow_offloading 会把已建连的流 offload 到 fastpath，跳过 nftables，
-# 导致 TPROXY/redirect 规则被绕过。必须确保关闭。
-uci set firewall.@defaults[0].flow_offloading='0' 2>/dev/null
+uci set firewall.@defaults[0].flow_offloading='1' 2>/dev/null
+uci set firewall.@defaults[0].flow_offloading_hw='1' 2>/dev/null
 uci commit firewall 2>/dev/null
 exit 0
 FOEOF
-chmod +x "$PKG_DIR/base-files/files/etc/uci-defaults/99z-disable-flowoffload"
-echo "[3b/6] flow_offloading disable script written!"
-
-#---------------------------------------------------------------
-# [3c/6] 文件描述符限制：sing-box 高并发需要更多 FD
-#---------------------------------------------------------------
-cat > "$PKG_DIR/base-files/files/etc/uci-defaults/99z-fd-limits" << 'FDEOF'
-#!/bin/sh
-# sing-box 代理高并发，FD 上限提到 65536
-ulimit -n 65536 2>/dev/null
-# 系统级
-echo 65536 > /proc/sys/fs/nr_open 2>/dev/null
-echo 65536 > /proc/sys/fs/file-max 2>/dev/null
-exit 0
-FDEOF
-chmod +x "$PKG_DIR/base-files/files/etc/uci-defaults/99z-fd-limits"
-echo "[3c/6] fd limits script written!"
+chmod +x "$PKG_DIR/base-files/files/etc/uci-defaults/99z-flowoffload"
+echo "[3b/6] flow offload (software + PPE hardware) enable script written!"
 
 #---------------------------------------------------------------
 # [4/6] /etc/config/cpufreq 固定为 performance + 1382400
@@ -235,7 +222,7 @@ if [ -f "$WIFI_UC" ]; then
 	sed -i '/if (band_name == "2G")/,/width = 80;/c\
 if (band_name == "2G") {\
 width = 20;\
-channel = 9;\
+channel = "auto";\
 }\
 else if (band_name == "5G") {\
 width = band.max_width > 160 ? 160 : band.max_width;\
@@ -245,12 +232,11 @@ else if (width > 80)\
 width = 80;' "$WIFI_UC"
 
 	# 国家代码统一 US（最优功率）；并补上 txpower（2.4G 24dBm / 5G 25dBm / 其它频段 0=驱动默认）
-	sed -i "s@set \${s}\.country='\${country || ''}'@set \${s}.country='US'
-set \${s}.txpower='\${band_name == '2g' ? 24 : (band_name == '5g' ? 25 : 0)}'@" "$WIFI_UC"
+	sed -i "s@set \${s}\.country='\${country || [^}]*}'@set \${s}.country='US'\nset \${s}.txpower='\${band_name == '2g' ? 15 : (band_name == '5g' ? 25 : 0)}'@" "$WIFI_UC"
 
-	if grep -q 'channel = 9;' "$WIFI_UC" && grep -q 'channel = 44;' "$WIFI_UC" \
+	if grep -q 'channel = "auto";' "$WIFI_UC" && grep -q 'channel = 44;' "$WIFI_UC" \
 		&& grep -q "country='US'" "$WIFI_UC" && grep -q 'txpower' "$WIFI_UC"; then
-		echo "[5/6] wifi generator patched (2.4G: US ch9 HE20 24dBm, 5G: US ch44 up-to-HE160 25dBm)!"
+		echo "[5/6] wifi generator patched (2.4G: US auto(1/6/11) HE20 15dBm, 5G: US ch44 up-to-HE160 25dBm)!"
 	else
 		echo "[5/6] [WARN] wifi generator patch did not fully apply (upstream mac80211.uc changed?), relying on uci-defaults!"
 	fi
@@ -276,11 +262,13 @@ configure_wifi() {
 	config_get band "$device" band
 	config_get htmode "$device" htmode
 
+	uci set wireless.$device.short_preamble='1'
 	case "$band" in
 	2g)
 		uci set wireless.$device.country='US'
-		uci set wireless.$device.channel='9'
-		uci set wireless.$device.txpower='24'
+		uci set wireless.$device.channel='auto'
+		uci set wireless.$device.channels='1 6 11'
+		uci set wireless.$device.txpower='15'
 		case "$htmode" in
 		HE*) uci set wireless.$device.htmode='HE20' ;;
 		esac
@@ -308,6 +296,9 @@ configure_iface() {
 	uci set wireless.$iface.encryption='psk2'
 	uci set wireless.$iface.key='123456789@'
 	uci set wireless.$iface.disabled='0'
+	# 低延迟：DTIM 1 + 组播转单播（与 K3 一致）
+	uci set wireless.$iface.dtim_period='1'
+	uci set wireless.$iface.multicast_to_unicast='1'
 }
 
 config_load wireless
@@ -358,7 +349,7 @@ sh "$GITHUB_WORKSPACE/Scripts/homeproxy-rt/apply-patches.sh" "$HP_SRC"
 bash "$GITHUB_WORKSPACE/Scripts/k3-diy.sh"
 
 # AP8220 专用定制 (ipq807x 构建时执行，其它目标自动跳过)
-# 内容：RPS 四核全开 (mask f) + hotplug 持久化
+# 内容：dnsmasq 缓存（IRQ/RPS 交给上游 packet-steering + smp_affinity）
 bash "$GITHUB_WORKSPACE/Scripts/ap8220-diy.sh"
 
 # N1 专用定制 (armsr 构建时执行，其它目标自动跳过)
