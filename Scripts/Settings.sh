@@ -43,6 +43,11 @@ if [ -f "$GITHUB_WORKSPACE/Config/PRIVATE.txt" ]; then
 	cat $GITHUB_WORKSPACE/Config/PRIVATE.txt >> ./.config
 fi
 
+#N1 专用：网络唤醒（GENERAL.txt 默认关闭，这里为 N1 重新打开）
+if [[ "$WRT_CONFIG" == "ARMSR-N1" ]]; then
+	printf '%s\n' CONFIG_PACKAGE_luci-app-wol=y CONFIG_PACKAGE_luci-i18n-wol-zh-cn=y CONFIG_PACKAGE_etherwake=y >> ./.config
+fi
+
 #手动调整的插件
 if [ -n "$WRT_PACKAGE" ]; then
 	echo -e "$WRT_PACKAGE" >> ./.config
