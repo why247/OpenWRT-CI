@@ -77,7 +77,7 @@ if [ -d "$HP_SRC" ] && [ -f "$HP_RT/apply-patches.sh" ]; then
 		# sing-box Go 运行时：GOGC=200 减半 GC 次数，GOMEMLIMIT 兜底（AP8220 1GB）
 		HP_INIT="$HP_SRC/root/etc/init.d/homeproxy"
 		GOMEM=384MiB; [[ "${WRT_TARGET,,}" == *armsr* ]] && GOMEM=768MiB
-		grep -q 'GOGC=200' "$HP_INIT" || sed -i "/QUIC_GO_DISABLE_GSO/a\\t\tprocd_append_param env GOGC=200 GOMEMLIMIT=$GOMEM" "$HP_INIT"
+		grep -q 'GOGC=200' "$HP_INIT" || sed -i "s/^\([[:space:]]*\)\(.*QUIC_GO_DISABLE_GSO.*\)$/\1\2\n\1procd_append_param env GOGC=200 GOMEMLIMIT=$GOMEM/" "$HP_INIT"
 		grep -q 'GOGC=200' "$HP_INIT" && echo "sing-box GOGC/GOMEMLIMIT set" || echo "WARNING: GOGC not injected" >&2
 		CN_IP_DIR="$HP_SRC/root/etc/homeproxy/resources"
 		mkdir -p "$CN_IP_DIR"
