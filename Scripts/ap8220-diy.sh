@@ -6,7 +6,7 @@
 #   /usr/libexec/platform/packet-steering.sh + /etc/init.d/smp_affinity，
 #   按 EDMA、ath11k 各中断精确分核，并在 netifd 事件后自动重新应用；
 #   自定义 RPS/XPS 会与它互相覆盖。中断合并会增加延迟，也不再设置。
-#   flow offload + PPE 硬件卸载由 PRIVATE.sh [3b/6] 开启。
+#   NSS 版：转发由 ECM/NSS 加速，PRIVATE.sh [3b/6] 关闭 fw4 flow offload。
 
 set -e
 
@@ -88,3 +88,17 @@ chmod +x "$UCID_DIR/99-ap8220-perf"
 echo "[3/3] performance governor init script"
 
 echo "AP8220 customizations applied!"
+
+#---------------------------------------------------------------
+# [4/4] NSS 核心频率 high（nss_freq 服务默认 mid = 748.8MHz）
+#---------------------------------------------------------------
+cat > "$UCID_DIR/99-ap8220-nssfreq" << 'NF_EOF'
+#!/bin/sh
+touch /etc/config/nss_freq
+uci -q set nss_freq.settings='settings'
+uci -q set nss_freq.settings.level='high'
+uci -q commit nss_freq
+exit 0
+NF_EOF
+chmod +x "$UCID_DIR/99-ap8220-nssfreq"
+echo "[4/4] NSS frequency level high script written!"
