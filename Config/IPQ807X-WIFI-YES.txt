@@ -3,3 +3,5 @@ CONFIG_TARGET_qualcommax=y
 CONFIG_TARGET_qualcommax_ipq807x=y
 #设备列表
 CONFIG_TARGET_DEVICE_qualcommax_ipq807x_DEVICE_aliyun_ap8220=y
+#频段引导（5G 信号够用时把双频设备推回 5G）
+CONFIG_PACKAGE_usteer=y
