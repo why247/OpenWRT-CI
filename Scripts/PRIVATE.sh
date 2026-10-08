@@ -345,11 +345,21 @@ echo "=============================================="
 echo "Private customizations applied!"
 echo "=============================================="
 
-# HomeProxy redirect/tproxy 改造
-# UPDATE_PACKAGE 把 VIKINGYFY/packages（main 分支）整个 clone 到 $PKG_DIR/packages，
-# luci-app-homeproxy 在仓库根目录
-HP_SRC="$PKG_DIR/packages/luci-app-homeproxy"
-sh "$GITHUB_WORKSPACE/Scripts/homeproxy-rt/apply-patches.sh" "$HP_SRC"
+# HomeProxy + sing-box：仓库内固化版本，不再跟随上游
+#   luci-app-homeproxy = VIKINGYFY/packages 23b2ec21 + homeproxy-rt/patches 01-15（已打好）
+#   sing-box           = 同一提交的 Makefile（1.15.0-alpha.10）
+# 上游改动不会再让编译失败；要升级时在 sandbox 重新生成这两个 tar.gz。
+# UPDATE_PACKAGE 仍把 VIKINGYFY/packages clone 到 $PKG_DIR/packages（其它包要用），这里覆盖这两个目录。
+HP_VENDOR="$GITHUB_WORKSPACE/Scripts/homeproxy-rt/vendor"
+for HP_PKG in luci-app-homeproxy sing-box; do
+	rm -rf "$PKG_DIR/packages/$HP_PKG"
+	if ! tar -xzf "$HP_VENDOR/$HP_PKG.tar.gz" -C "$PKG_DIR/packages"; then
+		echo "[ERROR] vendored $HP_PKG extract failed!"
+		exit 1
+	fi
+	echo "vendored $HP_PKG installed"
+done
+grep -m1 "PKG_UPSTREAM_VERSION" "$PKG_DIR/packages/sing-box/Makefile"
 
 # K3 专用定制 (bcm53xx/phicomm_k3 构建时执行，其它目标自动跳过)
 # 内容：asus-dhd24 WiFi 固件 / yangxu52 屏幕驱动 / hy2 sysctl+RPS / 无线覆盖 / sing-box 1.14.2 GO_ARM=5
