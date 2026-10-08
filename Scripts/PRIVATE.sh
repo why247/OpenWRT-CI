@@ -138,7 +138,7 @@ EOF
 echo "[3/6] sysctl.conf written!"
 
 #---------------------------------------------------------------
-# [3b/6] 关闭 fw4 flow offload（软件 + 硬件）
+# [3b/6] NSS 固件关闭 fw4 flow offload（软件 + 硬件），非 NSS（N1）保持开启
 #    本固件是 NSS 版（qca-nss-drv + ECM），转发加速由 ECM 交给 NSS 硬件。
 #    fw4 flowtable 会和 ECM 抢连接（实测 HW_OFFLOAD=0，软中断 15%），
 #    关掉后测速软中断 0-4%（2026-10-09 AP8220 实测）。
@@ -146,13 +146,20 @@ echo "[3/6] sysctl.conf written!"
 mkdir -p "$PKG_DIR/base-files/files/etc/uci-defaults"
 cat > "$PKG_DIR/base-files/files/etc/uci-defaults/99z-flowoffload" << 'FOEOF'
 #!/bin/sh
-uci set firewall.@defaults[0].flow_offloading='0' 2>/dev/null
-uci set firewall.@defaults[0].flow_offloading_hw='0' 2>/dev/null
+# NSS builds (AP8220): ECM accelerates, fw4 flowtable must be off.
+# Non-NSS builds (N1 etc.): keep fw4 flow offload on.
+if [ -x /etc/init.d/qca-nss-ecm ]; then
+	uci set firewall.@defaults[0].flow_offloading='0' 2>/dev/null
+	uci set firewall.@defaults[0].flow_offloading_hw='0' 2>/dev/null
+else
+	uci set firewall.@defaults[0].flow_offloading='1' 2>/dev/null
+	uci set firewall.@defaults[0].flow_offloading_hw='1' 2>/dev/null
+fi
 uci commit firewall 2>/dev/null
 exit 0
 FOEOF
 chmod +x "$PKG_DIR/base-files/files/etc/uci-defaults/99z-flowoffload"
-echo "[3b/6] fw4 flow offload disabled (NSS ECM handles acceleration)!"
+echo "[3b/6] flow offload script written (off on NSS/ECM, on otherwise)!"
 
 #---------------------------------------------------------------
 # [4/6] /etc/config/cpufreq 固定为 performance + 1382400
