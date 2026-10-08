@@ -63,11 +63,12 @@ fi
 #应用HomeProxy redirect/tproxy补丁集
 HP_SRC="$PACKAGE_PATH/packages/luci-app-homeproxy"
 HP_RT="$(cd "$(dirname "$0")" && pwd)/homeproxy-rt"
-if [ -d "$HP_SRC" ] && [ -f "$HP_RT/apply-patches.sh" ]; then
+# 源码已在 PRIVATE.sh 中以 vendor 方式替换（补丁 01-16 已预先打好），这里不再重复打补丁
+if [ -d "$HP_SRC" ]; then
 	echo " "
-	echo "Applying HomeProxy patch set..."
-	if sh "$HP_RT/apply-patches.sh" "$HP_SRC"; then
-		echo "HomeProxy patches applied!"
+	echo "HomeProxy vendored tree (patches pre-applied), post-processing..."
+	if grep -q 'GOGC=200' "$HP_SRC/root/etc/init.d/homeproxy"; then
+		echo "HomeProxy vendored patches present!"
 		# 更新描述：TUN -> Redirect+TPROXY (用 sed，比 patch 更稳健)
 		sed -i 's|Sing-Box/TUN/AI Edition|Sing-Box/Redirect+TPROXY|g' "$HP_SRC/Makefile"
 		sed -i 's|Sing-Box/TUN/AI Edition|Sing-Box/Redirect+TPROXY|g' "$HP_SRC/htdocs/luci-static/resources/view/homeproxy/server.js"
@@ -81,14 +82,6 @@ if [ -d "$HP_SRC" ] && [ -f "$HP_RT/apply-patches.sh" ]; then
 		grep -q 'GOGC=200' "$HP_INIT" && echo "sing-box GOGC/GOMEMLIMIT set" || echo "WARNING: GOGC not injected" >&2
 		CN_IP_DIR="$HP_SRC/root/etc/homeproxy/resources"
 		mkdir -p "$CN_IP_DIR"
-		# geolocation-!cn 规则集：已知国外域名直接走代理，跳过国内 DNS 二次解析
-		NONCN_URL='https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@sing/geo/geosite/geolocation-!cn.srs'
-		if curl -fsSL --retry 3 --max-time 60 "$NONCN_URL" -o "$CN_IP_DIR/geosite_noncn.srs.tmp" && [ "$(wc -c < "$CN_IP_DIR/geosite_noncn.srs.tmp")" -gt 10000 ]; then
-			mv "$CN_IP_DIR/geosite_noncn.srs.tmp" "$CN_IP_DIR/geosite_noncn.srs"
-			echo "Pre-seeded geosite_noncn.srs"
-		else
-			rm -f "$CN_IP_DIR/geosite_noncn.srs.tmp"
-		fi
 		if curl -fsSL --retry 3 --max-time 60 "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geoip/cn.list" -o "$CN_IP_DIR/cn_ip.list.tmp"; then
 			if [ "$(wc -l < "$CN_IP_DIR/cn_ip.list.tmp")" -ge 8000 ]; then
 				mv "$CN_IP_DIR/cn_ip.list.tmp" "$CN_IP_DIR/cn_ip.list"
@@ -99,7 +92,7 @@ if [ -d "$HP_SRC" ] && [ -f "$HP_RT/apply-patches.sh" ]; then
 			fi
 		fi
 	else
-		echo "HomeProxy patches FAILED! Aborting build." >&2
+		echo "HomeProxy vendored tree missing patches (GOGC marker)! Aborting build." >&2
 		exit 1
 	fi
 fi
