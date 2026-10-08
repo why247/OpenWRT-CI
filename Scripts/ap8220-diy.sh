@@ -102,28 +102,3 @@ exit 0
 NF_EOF
 chmod +x "$UCID_DIR/99-ap8220-nssfreq"
 echo "[4/4] NSS frequency level high script written!"
-
-#---------------------------------------------------------------
-# [5/5] 频段引导：同名双频时远处手机易落到 2.4G
-#       usteer 单机模式，2.4G 上能收到 5G 强于 -75 dBm 的双频设备每 10s 尝试推回 5G
-#       需要 802.11k/v（wpad-openssl 完整版已满足）；包在 Config/IPQ807X-WIFI-YES.txt
-#---------------------------------------------------------------
-cat > "$UCID_DIR/99-ap8220-usteer" << 'US_EOF'
-#!/bin/sh
-for i in $(uci -q show wireless | sed -n "s/^wireless\.\([^.]*\)=wifi-iface$/\1/p"); do
-	[ "$(uci -q get wireless.$i.mode)" = "ap" ] || continue
-	uci set wireless.$i.ieee80211k='1'
-	uci set wireless.$i.bss_transition='1'
-done
-uci commit wireless
-[ -f /etc/config/usteer ] || exit 0
-uci -q get usteer.@usteer[0] >/dev/null || uci add usteer usteer >/dev/null
-uci set usteer.@usteer[0].local_mode='1'
-uci set usteer.@usteer[0].band_steering_interval='10000'
-uci set usteer.@usteer[0].band_steering_min_snr='-75'
-uci commit usteer
-/etc/init.d/usteer enable
-exit 0
-US_EOF
-chmod +x "$UCID_DIR/99-ap8220-usteer"
-echo "[5/5] usteer band steering script written!"
