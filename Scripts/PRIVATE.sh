@@ -347,7 +347,7 @@ echo "=============================================="
 
 # HomeProxy + sing-box：仓库内固化版本，不再跟随上游
 #   luci-app-homeproxy = VIKINGYFY/packages 23b2ec21 + homeproxy-rt/patches 01-15（已打好）
-#   sing-box           = 同一提交的 Makefile（1.15.0-alpha.10）
+#   sing-box           = 同一提交的 Makefile，版本号在下面改成编译时的最新发布
 # 上游改动不会再让编译失败；要升级时在 sandbox 重新生成这两个 tar.gz。
 # UPDATE_PACKAGE 仍把 VIKINGYFY/packages clone 到 $PKG_DIR/packages（其它包要用），这里覆盖这两个目录。
 HP_VENDOR="$GITHUB_WORKSPACE/Scripts/homeproxy-rt/vendor"
@@ -359,7 +359,25 @@ for HP_PKG in luci-app-homeproxy sing-box; do
 	fi
 	echo "vendored $HP_PKG installed"
 done
-grep -m1 "PKG_UPSTREAM_VERSION" "$PKG_DIR/packages/sing-box/Makefile"
+
+# sing-box 编译时跟随 SagerNet 最新发布（含测试版；AP8220/N1 用户要求 2026-10-09）
+# 查询失败则保留 vendored 的版本。K3 在 k3-immortalwrt 仓库里固定版本，不走这里。
+SB_MK="$PKG_DIR/packages/sing-box/Makefile"
+SB_AUTH=""
+[ -n "$GITHUB_TOKEN" ] && SB_AUTH="Authorization: Bearer $GITHUB_TOKEN"
+SB_LATEST=$(curl -fsSL --retry 3 --max-time 30 ${SB_AUTH:+-H "$SB_AUTH"} \
+	"https://api.github.com/repos/SagerNet/sing-box/releases?per_page=1" \
+	| sed -n 's/.*"tag_name": *"v\{0,1\}\([^"]*\)".*/\1/p' | sed -n 1p)
+if echo "$SB_LATEST" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+(-[a-z]+\.[0-9]+)?$'; then
+	SB_PKGVER=$(echo "$SB_LATEST" | sed 's/-\([a-z]*\)\.\([0-9]*\)$/_\1\2/')
+	sed -i "s/^PKG_UPSTREAM_VERSION:=.*/PKG_UPSTREAM_VERSION:=$SB_LATEST/" "$SB_MK"
+	sed -i "s/^PKG_VERSION:=.*/PKG_VERSION:=$SB_PKGVER/" "$SB_MK"
+	sed -i "s/^PKG_HASH:=.*/PKG_HASH:=skip/" "$SB_MK"
+	echo "sing-box -> latest $SB_LATEST"
+else
+	echo "[WARN] sing-box latest lookup failed, keeping vendored version"
+fi
+grep -m1 "PKG_UPSTREAM_VERSION" "$SB_MK"
 
 # K3 专用定制 (bcm53xx/phicomm_k3 构建时执行，其它目标自动跳过)
 # 内容：asus-dhd24 WiFi 固件 / yangxu52 屏幕驱动 / hy2 sysctl+RPS / 无线覆盖 / sing-box 1.14.2 GO_ARM=5
