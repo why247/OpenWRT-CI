@@ -238,12 +238,12 @@ channel = 44;\
 else if (width > 80)\
 width = 80;' "$WIFI_UC"
 
-	# 国家代码统一 US（最优功率）；并补上 txpower（2.4G 20dBm / 5G 25dBm / 其它频段 0=驱动默认）
-	sed -i "s@set \${s}\.country='\${country || [^}]*}'@set \${s}.country='US'\nset \${s}.txpower='\${band_name == '2g' ? 20 : (band_name == '5g' ? 25 : 0)}'@" "$WIFI_UC"
+	# 国家代码统一 US（最优功率）；并补上 txpower（2.4G 18dBm / 5G 26dBm / 其它频段 0=驱动默认）
+	sed -i "s@set \${s}\.country='\${country || [^}]*}'@set \${s}.country='US'\nset \${s}.txpower='\${band_name == '2g' ? 18 : (band_name == '5g' ? 26 : 0)}'@" "$WIFI_UC"
 
 	if grep -q 'channel = "auto";' "$WIFI_UC" && grep -q 'channel = 44;' "$WIFI_UC" \
 		&& grep -q "country='US'" "$WIFI_UC" && grep -q 'txpower' "$WIFI_UC"; then
-		echo "[5/6] wifi generator patched (2.4G: US auto(1/6/11) HE20 15dBm, 5G: US ch44 up-to-HE160 25dBm)!"
+		echo "[5/6] wifi generator patched (2.4G: US auto(1/6/11) HE20 18dBm, 5G: US ch44 up-to-HE160 26dBm)!"
 	else
 		echo "[5/6] [WARN] wifi generator patch did not fully apply (upstream mac80211.uc changed?), relying on uci-defaults!"
 	fi
@@ -275,7 +275,7 @@ configure_wifi() {
 		uci set wireless.$device.country='US'
 		uci set wireless.$device.channel='auto'
 		uci set wireless.$device.channels='1 6 11'
-		uci set wireless.$device.txpower='20'
+		uci set wireless.$device.txpower='18'
 		case "$htmode" in
 		HE*) uci set wireless.$device.htmode='HE20' ;;
 		esac
@@ -283,7 +283,7 @@ configure_wifi() {
 	5g)
 		uci set wireless.$device.country='US'
 		uci set wireless.$device.channel='44'
-		uci set wireless.$device.txpower='25'
+		uci set wireless.$device.txpower='26'
 		case "$htmode" in
 		HE*) uci set wireless.$device.htmode='HE160' ;;
 		esac
