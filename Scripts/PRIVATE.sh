@@ -138,21 +138,21 @@ EOF
 echo "[3/6] sysctl.conf written!"
 
 #---------------------------------------------------------------
-# [3b/6] 开启 flow offload + PPE 硬件卸载
-#    上游 qualcommax 带 PPE flowtable 硬件卸载（含 Wi-Fi），国内直连交给硬件，
-#    CPU 全部留给 HY2。被代理的连接终止在本机 sing-box（redirect/TPROXY），
-#    不经过 forward 链，不会被卸载，所以不影响 HomeProxy。
+# [3b/6] 关闭 fw4 flow offload（软件 + 硬件）
+#    本固件是 NSS 版（qca-nss-drv + ECM），转发加速由 ECM 交给 NSS 硬件。
+#    fw4 flowtable 会和 ECM 抢连接（实测 HW_OFFLOAD=0，软中断 15%），
+#    关掉后测速软中断 0-4%（2026-10-09 AP8220 实测）。
 #---------------------------------------------------------------
 mkdir -p "$PKG_DIR/base-files/files/etc/uci-defaults"
 cat > "$PKG_DIR/base-files/files/etc/uci-defaults/99z-flowoffload" << 'FOEOF'
 #!/bin/sh
-uci set firewall.@defaults[0].flow_offloading='1' 2>/dev/null
-uci set firewall.@defaults[0].flow_offloading_hw='1' 2>/dev/null
+uci set firewall.@defaults[0].flow_offloading='0' 2>/dev/null
+uci set firewall.@defaults[0].flow_offloading_hw='0' 2>/dev/null
 uci commit firewall 2>/dev/null
 exit 0
 FOEOF
 chmod +x "$PKG_DIR/base-files/files/etc/uci-defaults/99z-flowoffload"
-echo "[3b/6] flow offload (software + PPE hardware) enable script written!"
+echo "[3b/6] fw4 flow offload disabled (NSS ECM handles acceleration)!"
 
 #---------------------------------------------------------------
 # [4/6] /etc/config/cpufreq 固定为 performance + 1382400
