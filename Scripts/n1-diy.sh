@@ -107,12 +107,12 @@ start() {
 	for q in /sys/class/net/eth0/queues/rx-*/rps_cpus; do echo d > "$q" 2>/dev/null; done
 	for q in /sys/class/net/eth0/queues/rx-*/rps_flow_cnt; do echo 4096 > "$q" 2>/dev/null; done
 	echo 16384 > /proc/sys/net/core/rps_sock_flow_entries 2>/dev/null
-	# Ring 拉满；中断合并 20us 兼顾延迟与突发
+	# Ring 拉满；中断合并 30us 兼顾延迟与突发
 	mrx=$(ethtool -g eth0 2>/dev/null | awk '/^RX:/{print $2;exit}')
 	mtx=$(ethtool -g eth0 2>/dev/null | awk '/^TX:/{print $2;exit}')
 	[ -n "$mrx" ] && [ -n "$mtx" ] && ethtool -G eth0 rx "$mrx" tx "$mtx" 2>/dev/null
 	ethtool -K eth0 gro on gso on tso on rx on tx on sg on 2>/dev/null
-	ethtool -C eth0 rx-usecs 20 rx-frames 16 2>/dev/null
+	ethtool -C eth0 rx-usecs 30 2>/dev/null  # stmmac 不支持 rx-frames，合写会整条失败
 	echo 2000 > /proc/sys/net/core/netdev_max_backlog
 	echo 600 > /proc/sys/net/core/netdev_budget
 	# 路由转发用 fq_codel 压排队延迟；BBR 自带 pacing，不依赖 fq
