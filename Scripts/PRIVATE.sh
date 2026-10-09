@@ -153,7 +153,8 @@ if [ -x /etc/init.d/qca-nss-ecm ]; then
 	uci set firewall.@defaults[0].flow_offloading_hw='0' 2>/dev/null
 else
 	uci set firewall.@defaults[0].flow_offloading='1' 2>/dev/null
-	uci set firewall.@defaults[0].flow_offloading_hw='1' 2>/dev/null
+	# N1 (amlogic dwmac) has no hardware flow offload; software only
+	uci set firewall.@defaults[0].flow_offloading_hw='0' 2>/dev/null
 fi
 uci commit firewall 2>/dev/null
 exit 0
