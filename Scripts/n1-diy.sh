@@ -334,7 +334,10 @@ config ddns 'global'
 # 或直接编辑本文件后执行：/etc/init.d/ddns restart
 config service 'my3322'
 	option enabled '0'
-	option service_name '3322.org'
+	# 内置 3322.org 服务用旧地址 members.3322.org(已 404),改用公云新接口
+	option update_url 'http://[USERNAME]:[PASSWORD]@members.3322.net/dyndns/update?system=dyndns&hostname=[DOMAIN]&myip=[IP]'
+	# 查已注册 IP 时绕开本机代理 DNS
+	option dns_server '202.96.134.133'
 	option domain 'yourname.3322.org'
 	option username 'your-3322-username'
 	option password 'your-3322-password'
