@@ -246,7 +246,8 @@ config interface 'loopback'
 	option netmask '255.0.0.0'
 
 config globals 'globals'
-	option packet_steering '0'
+	option packet_steering '1'
+	option steering_flows '4096'
 
 config device
 	option name 'eth0'
