@@ -42,6 +42,9 @@ uci set dhcp.@dnsmasq[0].cachesize='10000'
 # 去掉 ImmortalWrt 默认的 min_cache_ttl/use_stale_cache 3600：会把 CDN 短 TTL 硬缓存 1 小时，B站晚高峰卡在旧节点（2026-10-13 实测）
 uci -q delete dhcp.@dnsmasq[0].min_cache_ttl
 uci -q delete dhcp.@dnsmasq[0].use_stale_cache
+# EDNS 包长 512：1232 时 sing-box 带 authority/additional 大包回，dnsmasq 转给非 EDNS 客户端超 512 置 TC，
+# 不重试 TCP 的客户端（电视/IoT/部分 App）首查为空；512 后冷查询 20/20 一次成功（2026-10-13 实测）
+uci set dhcp.@dnsmasq[0].ednspacket_max='512'
 uci commit dhcp
 exit 0
 DNS_EOF
