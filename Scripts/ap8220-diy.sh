@@ -39,6 +39,9 @@ cat > "$UCID_DIR/99-ap8220-dnsmasq" << 'DNS_EOF'
 #!/bin/sh
 uci -q get dhcp.@dnsmasq[0] >/dev/null 2>&1 || exit 0
 uci set dhcp.@dnsmasq[0].cachesize='10000'
+# 去掉 ImmortalWrt 默认的 min_cache_ttl/use_stale_cache 3600：会把 CDN 短 TTL 硬缓存 1 小时，B站晚高峰卡在旧节点（2026-10-13 实测）
+uci -q delete dhcp.@dnsmasq[0].min_cache_ttl
+uci -q delete dhcp.@dnsmasq[0].use_stale_cache
 uci commit dhcp
 exit 0
 DNS_EOF
@@ -102,3 +105,21 @@ exit 0
 NF_EOF
 chmod +x "$UCID_DIR/99-ap8220-nssfreq"
 echo "[4/4] NSS frequency level high script written!"
+
+#---------------------------------------------------------------
+# [5/5] B站域名直问运营商 DNS（绕过 sing-box，wan 每次上线取当前 DNS）
+#       经 dnsmasq->sing-box 偶发 NOERROR 空答案，短视频滑动卡顿；直问移动 DNS 0/80（2026-10-13 实测）
+#---------------------------------------------------------------
+HP_DIR="$PKG_DIR/base-files/files/etc/hotplug.d/iface"
+mkdir -p "$HP_DIR"
+cat > "$HP_DIR/95-bili-dns" << 'BD_EOF'
+#!/bin/sh
+[ "$ACTION" = ifup ] && [ "$INTERFACE" = wan ] || exit 0
+W=$(ifstatus wan | jsonfilter -e '@["dns-server"][0]'); [ -n "$W" ] || exit 0
+for s in $(uci -q get dhcp.@dnsmasq[0].server); do case "$s" in /bili*|/hdslb.com/*) uci del_list dhcp.@dnsmasq[0].server="$s";; esac; done
+for d in bilibili.com bilivideo.com bilivideo.cn hdslb.com biliapi.net biliapi.com bilicdn1.com bilicdn2.com; do uci add_list dhcp.@dnsmasq[0].server="/$d/$W"; done
+uci commit dhcp; /etc/init.d/dnsmasq restart
+logger -t bili-dns "bili domains -> $W"
+BD_EOF
+chmod +x "$HP_DIR/95-bili-dns"
+echo "[5/5] bilibili DNS via ISP hotplug written!"
