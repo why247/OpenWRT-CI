@@ -169,12 +169,11 @@ exit 0
 EOF
 chmod +x "$UCID_DIR/99-n1-perf"
 
-# PPPoE 重拨/接口重载时 netifd 会把 RPS 清零：iface ifup 时重新应用 n1-perf
+# PPPoE 重拨/接口重载时 packet steering 会把 RPS 改回 1：任意 iface ifup 后重新应用 n1-perf (不过滤接口，wan6 等晚上线也覆盖)
 mkdir -p "$PKG_DIR/base-files/files/etc/hotplug.d/iface"
 cat > "$PKG_DIR/base-files/files/etc/hotplug.d/iface/99-n1-perf" << 'EOF'
 #!/bin/sh
 [ "$ACTION" = ifup ] || exit 0
-case "$INTERFACE" in wan|lan) ;; *) exit 0 ;; esac
 ( sleep 3; /etc/init.d/n1-perf start ) >/dev/null 2>&1 &
 EOF
 
