@@ -295,6 +295,8 @@ config dnsmasq
 	option readethers '1'
 	option leasefile '/tmp/dhcp.leases'
 	option resolvfile '/tmp/resolv.conf.d/resolv.conf.auto'
+	# 电信 DNS 把 3322.org 劫持成 127.0.0.1，DDNS 域名走阿里 DNS
+	list server '/3322.org/223.5.5.5'
 	option localservice '1'
 	option ednspacket_max '1232'
 
@@ -337,7 +339,7 @@ config service 'my3322'
 	# 内置 3322.org 服务用旧地址 members.3322.org(已 404),改用公云新接口
 	option update_url 'http://[USERNAME]:[PASSWORD]@members.3322.net/dyndns/update?system=dyndns&hostname=[DOMAIN]&myip=[IP]'
 	# 查已注册 IP 时绕开本机代理 DNS
-	option dns_server '202.96.134.133'
+	option dns_server '223.5.5.5'
 	option domain 'yourname.3322.org'
 	option username 'your-3322-username'
 	option password 'your-3322-password'
