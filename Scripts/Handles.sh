@@ -75,6 +75,15 @@ if [ -d "$HP_SRC" ]; then
 		sed -i 's|Sing-Box/TUN/AI Edition|Sing-Box/Redirect+TPROXY|g' "$HP_SRC/htdocs/luci-static/resources/view/homeproxy/client.js"
 		sed -i "s/import { isnan } from 'math';/const isnan = (x) => x !== x;/" "$HP_SRC/root/etc/homeproxy/scripts/generate_client.uc"
 		echo "HomeProxy description updated"
+		# 17: 国内补充域名表 cn_extra.txt（geosite-cn 缺字节 snssdk.com 等，抖音/头条 API 被 FakeIP 走代理；2026-10-13 实测）
+		if ! grep -q cn_extra "$HP_SRC/root/etc/homeproxy/scripts/generate_client.uc"; then
+			if patch -d "$HP_SRC" -p1 --forward --fuzz=0 --batch < "$HP_RT/patches/17-cn-extra.patch"; then
+				echo "HomeProxy cn_extra applied"
+			else
+				echo "HomeProxy cn_extra patch failed! Aborting build." >&2
+				exit 1
+			fi
+		fi
 		# sing-box Go 运行时：GOGC=200 减半 GC 次数，GOMEMLIMIT 兜底（AP8220 1GB）
 		HP_INIT="$HP_SRC/root/etc/init.d/homeproxy"
 		GOMEM=384MiB; [[ "${WRT_TARGET,,}" == *armsr* ]] && GOMEM=768MiB
