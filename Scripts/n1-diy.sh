@@ -286,8 +286,6 @@ config dnsmasq
 	option local '/lan/'
 	option domain 'lan'
 	option expandhosts '1'
-	option min_cache_ttl '3600'
-	option use_stale_cache '3600'
 	option cachesize '10000'
 	option nonegcache '1'
 	option authoritative '1'
@@ -297,7 +295,8 @@ config dnsmasq
 	# 电信 DNS 把 3322.org 劫持成 127.0.0.1，DDNS 域名走阿里 DNS
 	list server '/3322.org/223.5.5.5'
 	option localservice '1'
-	option ednspacket_max '1232'
+	# 512: 1232 时 sing-box 大答复被 dnsmasq 截断成 TC，BusyBox/IoT 首次解析为空（2026-10-13 AP8220 实测）
+	option ednspacket_max '512'
 
 config dhcp 'lan'
 	option interface 'lan'
