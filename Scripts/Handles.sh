@@ -84,6 +84,15 @@ if [ -d "$HP_SRC" ]; then
 				exit 1
 			fi
 		fi
+		# 18: 国内域名 = MetaCubeX cn ∪ felixonmars china-list（路由器上编译）；未知域名先问国内 DNS，答国内 IP 才直连；dnsmasq EDNS 512（2026-10-13 AP8220 实测）
+		if ! grep -q probe_ready "$HP_SRC/root/etc/homeproxy/scripts/generate_client.uc"; then
+			if patch -d "$HP_SRC" -p1 --forward --fuzz=0 --batch < "$HP_RT/patches/18-cn-union-dnsmasq.patch"; then
+				echo "HomeProxy cn union/probe applied"
+			else
+				echo "HomeProxy patch 18 failed! Aborting build." >&2
+				exit 1
+			fi
+		fi
 		# sing-box Go 运行时：GOGC=200 减半 GC 次数，GOMEMLIMIT 兜底（AP8220 1GB）
 		HP_INIT="$HP_SRC/root/etc/init.d/homeproxy"
 		GOMEM=384MiB; [[ "${WRT_TARGET,,}" == *armsr* ]] && GOMEM=768MiB
