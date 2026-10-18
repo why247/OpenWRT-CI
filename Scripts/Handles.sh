@@ -102,6 +102,15 @@ if [ -d "$HP_SRC" ]; then
 				exit 1
 			fi
 		fi
+		# 20: 国内 DNS 备用：主国内 DNS 只回 CNAME/超时(2s) 时改问备用(223.5.5.5/119.29.29.29)；未知域名探测同样兜底；default_mark 防 DNS 回环（2026-10-18 N1 实测）
+		if ! grep -q china-backup-dns "$HP_SRC/root/etc/homeproxy/scripts/generate_client.uc"; then
+			if patch -d "$HP_SRC" -p1 --forward --fuzz=0 --batch < "$HP_RT/patches/20-cn-dns-fallback.patch"; then
+				echo "HomeProxy CN DNS fallback applied"
+			else
+				echo "HomeProxy patch 20 failed! Aborting build." >&2
+				exit 1
+			fi
+		fi
 		# sing-box Go 运行时：GOGC=200 减半 GC 次数，GOMEMLIMIT 兜底（AP8220 1GB）
 		HP_INIT="$HP_SRC/root/etc/init.d/homeproxy"
 		GOMEM=384MiB; [[ "${WRT_TARGET,,}" == *armsr* ]] && GOMEM=768MiB
