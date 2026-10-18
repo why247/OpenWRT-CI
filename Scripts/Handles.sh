@@ -111,6 +111,15 @@ if [ -d "$HP_SRC" ]; then
 				exit 1
 			fi
 		fi
+		# 21: 国内 DNS 提速：NXDOMAIN 与无地址 AAAA 直接采纳不再问备用（AAAA 25->15ms，NX 60->14ms）；DNS 缓存 optimistic + 8192 条 + store_dns（tmpfs，reload 后 14->4ms）（2026-10-18 N1 实测）
+		if ! grep -q response_rcode "$HP_SRC/root/etc/homeproxy/scripts/generate_client.uc"; then
+			if patch -d "$HP_SRC" -p1 --forward --fuzz=0 --batch < "$HP_RT/patches/21-cn-dns-fast.patch"; then
+				echo "HomeProxy CN DNS fast path applied"
+			else
+				echo "HomeProxy patch 21 failed! Aborting build." >&2
+				exit 1
+			fi
+		fi
 		# sing-box Go 运行时：GOGC=200 减半 GC 次数，GOMEMLIMIT 兜底（AP8220 1GB）
 		HP_INIT="$HP_SRC/root/etc/init.d/homeproxy"
 		GOMEM=384MiB; [[ "${WRT_TARGET,,}" == *armsr* ]] && GOMEM=768MiB
