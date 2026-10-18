@@ -93,6 +93,15 @@ if [ -d "$HP_SRC" ]; then
 				exit 1
 			fi
 		fi
+		# 19: WAN DNS 自愈：生成配置时记录读到的拨号 DNS（没读到记空，回落 223.5.5.5），iface 热插拔对比，不一致就 reload（2026-10-18 N1 开机抢跑实测）
+		if ! grep -q wan_dns_seen "$HP_SRC/root/etc/homeproxy/scripts/generate_client.uc"; then
+			if patch -d "$HP_SRC" -p1 --forward --fuzz=0 --batch < "$HP_RT/patches/19-wan-dns-refresh.patch"; then
+				echo "HomeProxy WAN DNS refresh applied"
+			else
+				echo "HomeProxy patch 19 failed! Aborting build." >&2
+				exit 1
+			fi
+		fi
 		# sing-box Go 运行时：GOGC=200 减半 GC 次数，GOMEMLIMIT 兜底（AP8220 1GB）
 		HP_INIT="$HP_SRC/root/etc/init.d/homeproxy"
 		GOMEM=384MiB; [[ "${WRT_TARGET,,}" == *armsr* ]] && GOMEM=768MiB
