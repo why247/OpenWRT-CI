@@ -1,0 +1,30 @@
+diff --git a/root/etc/homeproxy/scripts/update_resources.sh b/root/etc/homeproxy/scripts/update_resources.sh
+index 263d924..b6b1e33 100755
+--- a/root/etc/homeproxy/scripts/update_resources.sh
++++ b/root/etc/homeproxy/scripts/update_resources.sh
+@@ -50,7 +50,9 @@ DASHBOARD_UPDATED=0
+ mark_updated() {
+ 	UPDATED_BRANCHES="${UPDATED_BRANCHES:+$UPDATED_BRANCHES,}$1"
+ 	case "$1" in
+-	dashboard) DASHBOARD_UPDATED=1 ;;
++	# Static files served from disk: only a first install needs a reload
++	# (the config enables the dashboard only once index.html exists).
++	dashboard) [ "$DASHBOARD_EXISTED" = 1 ] || DASHBOARD_UPDATED=1 ;;
+ 	# cn_ip: nft sets are hot-swapped below; geosite_cn: sing-box reloads
+ 	# a local rule-set by itself when the file changes (sing-box >= 1.10).
+ 	# Neither needs a service restart, so proxied connections stay up.
+@@ -389,7 +391,13 @@ for extra in "geosite_ms_cn $GEOSITE_MS_CN_SOURCE" "geosite_games_cn $GEOSITE_GA
+ 	EXTRA_EXISTED=0; [ -s "$RESOURCES_DIR/$1.srs" ] && EXTRA_EXISTED=1
+ 	update_hashed_resource "$1" "$2" "srs" "validate_rule_set" || mark_failed "$1"
+ done
+-update_dashboard || mark_failed "dashboard"
++# Dashboard off: skip the download and never reload sing-box for it.
++if [ "$(uci -q get homeproxy.config.dashboard_enabled)" = "1" ]; then
++	DASHBOARD_EXISTED=0; [ -s "$DASHBOARD_DIR/index.html" ] && DASHBOARD_EXISTED=1
++	update_dashboard || mark_failed "dashboard"
++else
++	log "[dashboard] Disabled; skipped."
++fi
+ 
+ if [ -n "$FAILED_BRANCHES" ]; then
+ 	if [ -n "$UPDATED_BRANCHES" ]; then
