@@ -108,3 +108,34 @@ exit 0
 NF_EOF
 chmod +x "$UCID_DIR/99-ap8220-nssfreq"
 echo "[4/4] NSS frequency level high script written!"
+
+#---------------------------------------------------------------
+# [5/5] Wi-Fi 漫游/频段引导：802.11k/v/WNM + usteer
+#    手机贴在 2.4G（-69dBm、6~12Mbps）导致 B站拖动卡顿，开启后被引导回 5G（2026-11-14 实测）。
+#    两个频段 SSID 同名（jy）才能引导；usteer 包由 Config/IPQ807X-WIFI-YES.txt 选中。
+#    文件名 99zz 保证排在 99z-custom-wireless 之后执行。
+#    回滚：/etc/init.d/usteer disable；删掉下面 4 个 wireless 选项；wifi reload
+#---------------------------------------------------------------
+cat > "$UCID_DIR/99zz-ap8220-roam" << 'RO_EOF'
+#!/bin/sh
+[ -f /etc/config/wireless ] || exit 0
+for s in $(uci show wireless | sed -n "s/^wireless\.\([^.]*\)=wifi-iface$/\1/p"); do
+	[ "$(uci -q get wireless.$s.mode)" = ap ] || continue
+	uci set wireless.$s.ieee80211k='1'
+	uci set wireless.$s.bss_transition='1'
+	uci set wireless.$s.wnm_sleep_mode='1'
+	uci set wireless.$s.time_advertisement='2'
+done
+uci commit wireless
+if [ -f /etc/config/usteer ]; then
+	uci -q get usteer.@usteer[0] >/dev/null || uci add usteer usteer >/dev/null
+	uci set usteer.@usteer[0].band_steering_threshold='5'
+	uci set usteer.@usteer[0].band_steering_interval='30000'
+	uci set usteer.@usteer[0].syslog='1'
+	uci commit usteer
+	/etc/init.d/usteer enable
+fi
+exit 0
+RO_EOF
+chmod +x "$UCID_DIR/99zz-ap8220-roam"
+echo "[5/5] Wi-Fi 802.11k/v + usteer band steering written!"
