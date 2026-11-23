@@ -406,7 +406,7 @@ rm -f "$WRT_DIR/files/etc/uci-defaults/99-hy2-tune" "$WRT_DIR/files/etc/sysctl.d
 echo "=== N1: homeproxy main node default ==="
 cat > "$UCID_DIR/99-n1-homeproxy-main" << 'EOF'
 #!/bin/sh
-s=$(uci -q show homeproxy | sed -n "s/^homeproxy\.\([^.]*\)\.label='why hysteria2'$/\1/p" | head -n1)
+s=$(uci -q -X show homeproxy | sed -n "s/^homeproxy\.\([^.]*\)\.label='why hysteria2'$/\1/p" | head -n1)
 if [ -n "$s" ]; then
 	uci -q set homeproxy.config.main_node="$s"
 	uci -q commit homeproxy
