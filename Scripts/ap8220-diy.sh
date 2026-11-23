@@ -139,3 +139,30 @@ exit 0
 RO_EOF
 chmod +x "$UCID_DIR/99zz-ap8220-roam"
 echo "[5/5] Wi-Fi 802.11k/v + usteer band steering written!"
+
+#---------------------------------------------------------------
+# [C1] B站 PCDN/STUN 快速拒绝 (同步自 N1 2026-11-23; LAN=br-lan)
+#---------------------------------------------------------------
+mkdir -p "$PKG_DIR/base-files/files/etc/nftables.d"
+cat > "$PKG_DIR/base-files/files/etc/nftables.d/20-bili-pcdn-reject.nft" << 'NFT_EOF'
+chain bili_pcdn_reject {
+    type filter hook forward priority -1; policy accept;
+    iifname "br-lan" oifname != "br-lan" meta l4proto tcp tcp flags & (syn|ack) == syn tcp dport { 4480, 8000, 23861, 33861, 43861, 53861, 63861 } counter reject with tcp reset comment "bili-pcdn-tcp"
+    iifname "br-lan" oifname != "br-lan" meta l4proto udp udp dport 3478 counter reject comment "bili-stun"
+    iifname "br-lan" oifname != "br-lan" ip daddr 10.0.0.0/8 meta l4proto udp counter reject comment "bili-p2p-priv"
+}
+NFT_EOF
+
+# [C3] HomeProxy 默认主节点 = why hysteria2 (存在才改)
+cat > "$UCID_DIR/99-homeproxy-main" << 'HPM_EOF'
+#!/bin/sh
+s=$(uci -q -X show homeproxy | sed -n "s/^homeproxy\.\([^.]*\)\.label='why hysteria2'$/\1/p" | head -n1)
+if [ -n "$s" ]; then
+	uci -q set homeproxy.config.main_node="$s"
+	uci -q commit homeproxy
+	logger -t homeproxy-main "main_node -> $s (why hysteria2)"
+fi
+exit 0
+HPM_EOF
+chmod +x "$UCID_DIR/99-homeproxy-main"
+echo "[6/6] bili PCDN reject + HomeProxy main node written!"
