@@ -416,6 +416,21 @@ exit 0
 EOF
 chmod +x "$UCID_DIR/99-n1-homeproxy-main"
 
+#---------------------------------------------------------------
+# [C4] B站 PCDN 域名屏蔽 (2026-11-23, 4 固件统一)
+#---------------------------------------------------------------
+cat > "$UCID_DIR/99-bili-pcdn-dns" << 'PD_EOF'
+#!/bin/sh
+# B站 PCDN 域名屏蔽 (dnsmasq 返回 NXDOMAIN, App 回退正规 CDN)
+for d in mcdn.bilivideo.cn mcdn.bilivideo.com szbdyd.com mountaintoys.cn; do
+	uci -q del_list dhcp.@dnsmasq[0].address="/$d/"
+	uci -q add_list dhcp.@dnsmasq[0].address="/$d/"
+done
+uci -q commit dhcp
+exit 0
+PD_EOF
+chmod +x "$UCID_DIR/99-bili-pcdn-dns"
+
 echo "=============================================="
 echo "N1 customizations applied!"
 echo "=============================================="
