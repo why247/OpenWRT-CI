@@ -378,6 +378,44 @@ else
 	echo "[WARN] luci-app-homeproxy not found, skipping cn_ip.list pre-seed"
 fi
 
+#---------------------------------------------------------------
+# [C1] B站 PCDN/STUN 快速拒绝 (N1 单臂: LAN=eth0, WAN=pppoe-wan, 无 br-lan)
+# 2026-11-23 实机验证: STUN 20s 命中 488 包, App 立即回退 CDN
+#---------------------------------------------------------------
+echo "=== N1: bili-pcdn-reject nft ==="
+mkdir -p "$WRT_DIR/files/etc/nftables.d"
+cat > "$WRT_DIR/files/etc/nftables.d/20-bili-pcdn-reject.nft" << 'EOF'
+chain bili_pcdn_reject {
+    type filter hook forward priority -1; policy accept;
+    iifname "eth0" oifname "pppoe-wan" meta l4proto tcp tcp flags & (syn|ack) == syn tcp dport { 4480, 8000, 23861, 33861, 43861, 53861, 63861 } counter reject with tcp reset comment "bili-pcdn-tcp"
+    iifname "eth0" oifname "pppoe-wan" meta l4proto udp udp dport 3478 counter reject comment "bili-stun"
+    iifname "eth0" oifname "pppoe-wan" ip daddr 10.0.0.0/8 meta l4proto udp counter reject comment "bili-p2p-priv"
+}
+EOF
+
+#---------------------------------------------------------------
+# [C2] 去掉 K3/AP8220 通用 hy2 文件, 以 n1-perf 为准
+# 冲突: RPS f vs d(避开 IRQ 的 CPU1) / fq vs fq_codel / rmem_default 16M vs 1M
+#---------------------------------------------------------------
+echo "=== N1: drop generic hy2 tune files ==="
+rm -f "$WRT_DIR/files/etc/uci-defaults/99-hy2-tune" "$WRT_DIR/files/etc/sysctl.d/99-hy2.conf"
+
+#---------------------------------------------------------------
+# [C3] HomeProxy 默认主节点 = why hysteria2 (存在才改, 否则保留 urltest)
+#---------------------------------------------------------------
+echo "=== N1: homeproxy main node default ==="
+cat > "$UCID_DIR/99-n1-homeproxy-main" << 'EOF'
+#!/bin/sh
+s=$(uci -q show homeproxy | sed -n "s/^homeproxy\.\([^.]*\)\.label='why hysteria2'$/\1/p" | head -n1)
+if [ -n "$s" ]; then
+	uci -q set homeproxy.config.main_node="$s"
+	uci -q commit homeproxy
+	logger -t n1-homeproxy "main_node -> $s (why hysteria2)"
+fi
+exit 0
+EOF
+chmod +x "$UCID_DIR/99-n1-homeproxy-main"
+
 echo "=============================================="
 echo "N1 customizations applied!"
 echo "=============================================="
